@@ -148,3 +148,4 @@ p2<- ggplot(results[results$METRIC == "MAE" & results$Alpha == 2,], aes(x = Mean
 grid.arrange(p1, p2, nrow = 1)
 graph2ppt(file = "./figures/MAEDistribution_withinIndividVariation_FixedXiAlphaOmega.pptx", width = 10, height = 5.78)
 
+

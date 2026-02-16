@@ -15,6 +15,7 @@ library(ggbreak)
 library(data.table)
 library(export)
 library(ggplotify)
+library(tidyr)
 # Folder containing your RDS files
 folder <- "./RDS_Simulation_HistogramVarying/" #Comes from GenerateFig2Data.R
 
@@ -167,3 +168,23 @@ grid.arrange(p, as.grob(p_MAE), nrow = 2, ncol = 1)
 
 graph2ppt(file = "./Figures/Simulation_MAE_paired.pptx", width = 8, height = 8.5)
 
+df_all$xi <- as.factor(df_all$xi)
+df_all$alpha <- as.factor(df_all$alpha)
+df_all$omega <- as.factor(df_all$omega)
+
+fit <- aov(MAE ~ 
+             factor(alpha) * 
+             factor(omega) * 
+             factor(xi),
+           data = df_all)
+
+car::Anova(fit, type = "2")
+
+
+cell_means <- setDT(df_all)[, .(mean_MAE = mean(MAE)), 
+                 by = .(alpha, omega, xi)]
+fit2 <- aov(mean_MAE ~ 
+             factor(alpha) * 
+             factor(omega) * 
+             factor(xi),
+           data = cell_means)
