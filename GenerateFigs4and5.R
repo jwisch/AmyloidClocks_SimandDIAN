@@ -21,7 +21,7 @@ source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
 
-df <- read.csv("./Data/cleaned_df_withBatchNorming_20260106.csv")
+df <- read.csv("../Alamar_AmyloidClocks/Data/cleaned_df_withBatchNorming_20260106.csv") #data exists externally, not available for github release
 cols_to_zscore <- c("CSFpT181_Nico", "CSFpT217_Nico", "LUMIPULSE_CSF_pTau",
                     "plasmapTau217_Nico", "plasmapTau181_Nico", "plasmapTau181_jucker",
                     "Alamar_pTau181", "Alamar_pTau217", "AlamarCSF_pTau181",
@@ -685,7 +685,6 @@ grid.arrange(plots_ReliableAccumThresh_Alamar_pTau217_Z$full, plots_hist_Alamarp
              layout_matrix = layout)
 graph2ppt(file = "./Figures/FullCharacterization_AlamarpT217.pptx", width = 10, height = 8)
 
-#TODO: Fix p2 so that i just have highlighted dots instead of different facets
 
 p1 <- ggplot(RofC_pib_Z, aes(x = RofC_pib_Z)) +
   xlim(c(-2.5, 2.5)) +
@@ -693,12 +692,12 @@ p1 <- ggplot(RofC_pib_Z, aes(x = RofC_pib_Z)) +
   # Smoothed density scaled to histogram height
   geom_density(aes(y = after_stat(density * n * diff(range(x)) / 100)), colour = "#007B82", fill = "#007B82",
                alpha = 0.1) +
-  geom_density(data = RofC_plasmapT217_Nico_Z, 
-               aes(x = RofC_plasmapT217_Nico_Z, y = after_stat(density * n * diff(range(x)) / 100)),
+  geom_density(data = RofC_plasmapT181_Jucker_Z, 
+               aes(x = RofC_plasmapT181_Jucker_Z, y = after_stat(density * n * diff(range(x)) / 100)),
                colour = "#F8766D", fill = "#F8766D",
                alpha = 0.1) +
-  geom_density(data = RofC_AlamarCSFpT217_Z, 
-               aes(x = RofC_AlamarCSFpT217_Z, y = after_stat(density * n * diff(range(x)) / 100)),
+  geom_density(data = RofC_CSFpT181_Nico_Z, 
+               aes(x = RofC_CSFpT181_Nico_Z, y = after_stat(density * n * diff(range(x)) / 100)),
                colour = "#C77CFF", fill = "#C77CFF",
                alpha = 0.1) +
   theme_bw() +
@@ -710,8 +709,8 @@ p1 <- ggplot(RofC_pib_Z, aes(x = RofC_pib_Z)) +
   ) 
 
 RofC_fits$highlighter <- 0
-RofC_fits$highlighter[RofC_fits$biomarker_col == "plasmapT217_Nico"] <- 1
-RofC_fits$highlighter[RofC_fits$biomarker_col == "AlamarCSFpT217"] <- 2
+RofC_fits$highlighter[RofC_fits$biomarker_col == "plasmapT181_Jucker"] <- 1
+RofC_fits$highlighter[RofC_fits$biomarker_col == "CSFpT181_Nico"] <- 2
 RofC_fits$highlighter[RofC_fits$biomarker_col == "pib"] <- 3
 RofC_fits$highlighter <- as.factor(RofC_fits$highlighter)
 RofC_fits$modality <- c("CSF", "CSF", "Plasma", "Plasma",

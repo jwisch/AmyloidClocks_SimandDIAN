@@ -14,8 +14,9 @@ library(data.table)
 library(GGally)
 
 source("./functions.R")
+source("./Fig1and2Funcs.R")
 
-df <- read.csv("./Data/cleaned_df_withBatchNorming_20260106.csv")
+df <- read.csv("../Alamar_AmyloidClocks/Data/cleaned_df_withBatchNorming_20260106.csv")
 
 
 cols <- which(names(df) == "CL") : which(names(df) == "AlamarCSF_pTau217")
@@ -331,12 +332,12 @@ cp_PET_LumipulseCSF_pTau181_obj <- get_RofC_scatter_and_ROC(df[!duplicated(df$ne
  result_PET_CSFpT181_Nico_Z <- bootstrap_get_Time_to_Positivity(data.frame(df), (cp_PET_CSFpT181_Nico_obj[[3]]$optimal_cutpoint - mean(df[df$Mutation == 0 & !duplicated(df$newid18),]$CSFpT181_Nico, na.rm = TRUE))/sd(df[df$Mutation == 0 & !duplicated(df$newid18),]$CSFpT181_Nico, na.rm = TRUE),
                                                               "newid18", "TimefromBaseline",
                                                               "CSFpT181_Nico_Z", num_bootstraps = 1000)
+ result_PET_plasmapTau181_Jucker_Z <- bootstrap_get_Time_to_Positivity(data.frame(df), (cp_PET_plasmapTau181_Jucker_obj[[3]]$optimal_cutpoint - mean(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_jucker, na.rm = TRUE))/sd(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_jucker, na.rm = TRUE),
+                                                                       "newid18", "TimefromBaseline",
+                                                                       "plasmapTau181_jucker_Z", num_bootstraps = 1000)
  result_PET_plasmapTau181_Nico_Z <- bootstrap_get_Time_to_Positivity(data.frame(df), (cp_PET_plasmapTau181_Nico_obj[[3]]$optimal_cutpoint- mean(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_Nico, na.rm = TRUE))/sd(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_Nico, na.rm = TRUE),
                                                                    "newid18", "TimefromBaseline",
                                                                    "plasmapTau181_Nico_Z", num_bootstraps = 1000)
- result_PET_plasmapTau181_Jucker_Z <- bootstrap_get_Time_to_Positivity(data.frame(df), (cp_PET_plasmapTau181_Jucker_obj[[3]]$optimal_cutpoint - mean(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_jucker, na.rm = TRUE))/sd(df[df$Mutation == 0 & !duplicated(df$newid18),]$plasmapTau181_jucker, na.rm = TRUE),
-                                                                     "newid18", "TimefromBaseline",
-                                                                     "plasmapTau181_jucker_Z", num_bootstraps = 1000)
  result_PET_Alamar_pTau181_Z <- bootstrap_get_Time_to_Positivity(data.frame(df), (cp_PET_Alamar_pTau181_obj[[3]]$optimal_cutpoint- mean(df[df$Mutation == 1 & !duplicated(df$newid18) & df$DIAN_EYO < -10,]$Alamar_pTau181, na.rm = TRUE))/sd(df[df$Mutation == 1 & !duplicated(df$newid18) & df$DIAN_EYO < -10,]$Alamar_pTau181, na.rm = TRUE),
                                                              "newid18", "TimefromBaseline",
                                                                "Alamar_pTau181_Z", num_bootstraps = 1000)
@@ -351,16 +352,20 @@ df$TimefromApos_CSFpT217_Z <- approx(y = result_PET_CSFpT217_Nico_Z$Time_to_Posi
                                    x = result_PET_CSFpT217_Nico_Z$Estimate, xout = df$CSFpT217_Nico_Z)$y
 df$TimefromApos_AlamarpT217_Z <- approx(y = result_PET_Alamar_pTau217_Z$Time_to_Positivity, 
                                       x = result_PET_Alamar_pTau217_Z$Estimate, xout = df$Alamar_pTau217_Z)$y
-df$TimefromApos_Z <- approx(y = result_pib_Z$Time_to_Positivity, x = result_pib_Z$Estimate, xout = df$CL_Z)$y
 df$TimefromApos_AlamarCSFpT217_Z <- approx(y = result_PET_AlamarCSF_pTau217_Z$Time_to_Positivity, 
                                         x = result_PET_AlamarCSF_pTau217_Z$Estimate, xout = df$AlamarCSF_pTau217_Z)$y
 
+
+df$TimefromApos_Z <- approx(y = result_pib_Z$Time_to_Positivity, x = result_pib_Z$Estimate, xout = df$CL_Z)$y
+
 df$TimefromApos_CSFpT181_Z <- approx(y = result_PET_CSFpT181_Nico_Z$Time_to_Positivity, 
                                    x = result_PET_CSFpT181_Nico_Z$Estimate, xout = df$CSFpT181_Nico_Z)$y
-df$TimefromApos_plasmapT181_Nico_Z <- approx(y = result_PET_plasmapTau181_Nico_Z$Time_to_Positivity, 
-                                           x = result_PET_plasmapTau181_Nico_Z$Estimate, xout = df$plasmapTau181_Nico_Z)$y
 df$TimefromApos_plasmapT181_Jucker_Z <- approx(y = result_PET_plasmapTau181_Jucker_Z$Time_to_Positivity, 
                                              x = result_PET_plasmapTau181_Jucker_Z$Estimate, xout = df$plasmapTau181_jucker_Z)$y
+
+
+df$TimefromApos_plasmapT181_Nico_Z <- approx(y = result_PET_plasmapTau181_Nico_Z$Time_to_Positivity, 
+                                             x = result_PET_plasmapTau181_Nico_Z$Estimate, xout = df$plasmapTau181_Nico_Z)$y
 df$TimefromApos_AlamarpT181_Z <- approx(y = result_PET_Alamar_pTau181_Z$Time_to_Positivity, 
                                       x = result_PET_Alamar_pTau181_Z$Estimate, xout = df$Alamar_pTau181_Z)$y
 df$TimefromApos_AlamarCSFpT181_Z <- approx(y = result_PET_AlamarCSF_pTau181_Z$Time_to_Positivity, 
@@ -389,14 +394,15 @@ p_plasma_217 <- get_TimefromAposPlot(result_PET_plasmapTau217_Nico_Z, cp_plasmap
 
 p_pib  <- get_TimefromAposPlot(result_pib_Z, cp_pib_Z$optimal_cutpoint, 
                                "Amyloid PET - PiB Z")
-p_AlamarCSF_217 <- get_TimefromAposPlot(result_PET_AlamarCSF_pTau217_Z, cp_AlamarCSFpT217_Z$optimal_cutpoint, 
-                                     "CSF pTau217 - Alamar Z")
 p_CSF_181 <- get_TimefromAposPlot(result_PET_CSFpT181_Nico_Z, cp_CSFpT181_Nico_Z$optimal_cutpoint, 
                                   "CSF pTau181 - Nico Z")
-p_plasma_181 <- get_TimefromAposPlot(result_PET_plasmapTau181_Nico_Z, cp_plasmapT181_Nico_Z$optimal_cutpoint, 
-                                  "Plasma pTau181 - Nico Z")
 p_plasma_181_jucker <- get_TimefromAposPlot(result_PET_plasmapTau181_Jucker_Z, cp_plasmapT181_Jucker_Z$optimal_cutpoint, 
                                      "Plasma pTau181 - Jucker Z")
+
+p_plasma_181 <- get_TimefromAposPlot(result_PET_plasmapTau181_Nico_Z, cp_plasmapT181_Nico_Z$optimal_cutpoint, 
+                                     "Plasma pTau181 - Nico Z")
+p_AlamarCSF_217 <- get_TimefromAposPlot(result_PET_AlamarCSF_pTau217_Z, cp_AlamarCSFpT217_Z$optimal_cutpoint, 
+                                        "CSF pTau217 - Alamar Z")
 p_Alamar_181 <- get_TimefromAposPlot(result_PET_Alamar_pTau181_Z, cp_AlamarpT181_Z$optimal_cutpoint, 
                                      "Plasma pTau181 - Alamar Z")
 p_AlamarCSF_181 <- get_TimefromAposPlot(result_PET_AlamarCSF_pTau181_Z, cp_AlamarCSFpT181_Z$optimal_cutpoint, 
@@ -511,20 +517,26 @@ p_error_CSFpT217_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_co
                                                   value_col = "CSFpT217_Nico_Z", threshold = cp_PET_CSFpT217_Nico_obj[[3]]$optimal_cutpoint)
 p_error_Alamar_pTau217 <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
                                                    value_col = "Alamar_pTau217_Z", threshold = cp_PET_Alamar_pTau217_obj[[3]]$optimal_cutpoint)
+
+
+
 p_error_pib <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", value_col = "CL_Z")
+p_error_CSFpT181_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
+                                                  value_col = "CSFpT181_Nico_Z", threshold = cp_PET_CSFpT181_Nico_obj[[3]]$optimal_cutpoint)
+p_error_plasmapTau181_jucker <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
+                                                         value_col = "plasmapTau181_jucker_Z", threshold = cp_PET_plasmapTau181_Jucker_obj[[3]]$optimal_cutpoint)
+
+
+
 p_error_AlamarCSF_pTau217 <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
                                                    value_col = "AlamarCSF_pTau217_Z", threshold = cp_PET_AlamarCSF_pTau217_obj[[3]]$optimal_cutpoint)
 p_error_plasmapTau217_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
                                                        value_col = "plasmapTau217_Nico_Z", threshold = cp_PET_plasmapTau217_Nico_obj[[3]]$optimal_cutpoint)
 
-p_error_CSFpT181_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
-                         value_col = "CSFpT181_Nico_Z", threshold = cp_PET_CSFpT181_Nico_obj[[3]]$optimal_cutpoint)
 
 p_error_plasmapTau181_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
                                                        value_col = "plasmapTau181_Nico_Z", threshold = cp_PET_plasmapTau181_Nico_obj[[3]]$optimal_cutpoint)
 
-p_error_plasmapTau181_jucker <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
-                                                         value_col = "plasmapTau181_jucker_Z", threshold = cp_PET_plasmapTau181_Jucker_obj[[3]]$optimal_cutpoint)
 p_error_Alamar_pTau181 <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
                                                    value_col = "Alamar_pTau181_Z", threshold = cp_PET_Alamar_pTau181_obj[[3]]$optimal_cutpoint)
 p_error_AlamarCSF_pTau181 <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
@@ -608,8 +620,8 @@ graph2ppt(file = "./Figures/Evaluation_of_Real_Models.pptx", width = 4.5, height
 
 plots_no_legend <- list(
   strip_legend(p_pib),                strip_legend(p_error_pib),
-  strip_legend(p_AlamarCSF_217),      strip_legend(p_error_AlamarCSF_pTau217),
-  strip_legend(p_plasma_217),         strip_legend(p_error_plasmapTau217_Nico)
+  strip_legend(p_CSF_181),      strip_legend(p_error_CSFpT181_Nico),
+  strip_legend(p_plasma_181_jucker),         strip_legend(p_error_plasmapTau181_jucker)
 )
 
 # --- Step 3: Arrange all plots in a 2-column layout ---

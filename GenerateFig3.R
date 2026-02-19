@@ -34,11 +34,11 @@ simulate_dist_single <- function(
     geom_histogram(
       aes(y = after_stat(density)),
       bins = 50,
-      fill = "#00BFC4",
-      color = "#00BFC4",
+      fill = "#F8766D",
+      color = "#F8766D",
       alpha = 0.7
     ) +
-    geom_density(color = "#007B82", linewidth = 1) +
+    geom_density(color = "#A14D47", linewidth = 1) +
     theme_bw(base_size = 13) +
     theme(
       # remove grid lines
@@ -54,7 +54,7 @@ simulate_dist_single <- function(
       axis.text = element_blank()
     ) +
     scale_x_continuous(limits = c(-5, 5)) +
-    ylim(c(0, 1.2)) +
+    ylim(c(0, 1.3)) +
     geom_vline(xintercept = 0, linetype = "dashed")
   
   return(p)
@@ -64,7 +64,7 @@ p1 <- simulate_dist_single(xi = 0, omega = 0.5, alpha = 0)
 p2 <- simulate_dist_single(xi = 1, omega = 0.5, alpha = 0)
 p3 <- simulate_dist_single(xi = 0, omega = 0.5, alpha = 2)
 p4 <- simulate_dist_single(xi = 1, omega = 0.5, alpha = 2)
-grid.arrange(p1, p2, p3, p4, nrow = 1, ncol = 4)
+grid.arrange(p1, p2, p3, p4, nrow = 2, ncol = 2)
 
 graph2ppt(file = "./figures/MAEDistribution_withinIndividVariation_FixedXiAlphaOmega_Distributions.pptx", width = 9, height = 2)
 
@@ -137,15 +137,19 @@ p1 <- ggplot(results[results$METRIC == "MAE" & results$Alpha == 0,], aes(x = Mea
                                               ymin = mean_Value - 1.96 * sd_Value,
                                               ymax = mean_Value + 1.96 * sd_Value)) +
   geom_point() + geom_errorbar() + theme_bw() + facet_wrap(~Xi) + ylim(c(-6, 9)) +
-  xlab("Mean within-individual Variation") + ylab("Mean Average Error") + geom_hline(yintercept = 2, linetype = "dashed")
+  xlab("Mean within-individual Variation") + ylab("Mean Average Error") + geom_hline(yintercept = 2.1, linetype = "dashed") +
+  geom_hline(yintercept = 4.2, linetype = "dashed", colour = "grey70") + geom_hline(yintercept = 0, 
+                                                                                    linetype = "dashed", colour = "grey70")
 
 p2<- ggplot(results[results$METRIC == "MAE" & results$Alpha == 2,], aes(x = Mean_within_above, y = median_Value,
                                                                    ymin = mean_Value - 1.96 * sd_Value,
                                                                    ymax = mean_Value + 1.96 * sd_Value)) +
   geom_point() + geom_errorbar() + theme_bw() + facet_wrap(~Xi) + ylim(c(-6, 9))+
-  xlab("Mean within-individual Variation") + ylab("Mean Average Error")+ geom_hline(yintercept = 2, linetype = "dashed")
+  xlab("Mean within-individual Variation") + ylab("Mean Average Error")+ geom_hline(yintercept = 2.1, linetype = "dashed")+
+  geom_hline(yintercept = 4.2, linetype = "dashed", colour = "grey70") + geom_hline(yintercept = 0, 
+                                                                                    linetype = "dashed", colour = "grey70")
 
-grid.arrange(p1, p2, nrow = 1)
+grid.arrange(p1, p2, nrow = 2)
 graph2ppt(file = "./figures/MAEDistribution_withinIndividVariation_FixedXiAlphaOmega.pptx", width = 10, height = 5.78)
 
 
