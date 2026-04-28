@@ -21,7 +21,9 @@ source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
 
-df <- read.csv("../Alamar_AmyloidClocks/Data/cleaned_df_withBatchNorming_20260106.csv") #data exists externally, not available for github release
+df <- read.csv("../Alamar_AmyloidClocks/Data/cleaned_df_withBatchNorming_20260414.csv") #data exists externally, not available for github release
+colnames(df)[16:17] <- c("CSFpT181_Nico", "CSFpT217_Nico")
+df <- df[-15,]
 cols_to_zscore <- c("CSFpT181_Nico", "CSFpT217_Nico", "LUMIPULSE_CSF_pTau",
                     "plasmapTau217_Nico", "plasmapTau181_Nico", "plasmapTau181_jucker",
                     "Alamar_pTau181", "Alamar_pTau217", "AlamarCSF_pTau181",

@@ -5,7 +5,7 @@
 xi_vec <- c(-1, -0.5, 0, 0.5, 1)
 omega_vec <- c(0.5, 1, 1.5, 2)
 alpha_vec <- c(-1, -0.5, 0.5, 1)
-
+Time_Window <- seq(from = -5, to = 20, by = 0.5)
 
 # --- libraries ---
 library(mgcv)
@@ -19,9 +19,9 @@ source("./Simulation_functions.R")
 source("./functions.R")
 NBoots <- 1000 #Number of bootstraps
 
-mean_within_above <- 0.07 #fixed within individual variance
+mean_within_above <- 0 #fixed within individual variance
 
-n_ids <- 500
+n_ids <- 300
 num_of_scans_for_model <- 2
 minMeaningfulZ <- 0.9022
 AposThresh <- 2.600
@@ -38,14 +38,16 @@ avg_interval <- 2.02
 interval_noise <- 1.06
 
 
+combos <- data.frame("xi" = c(-1, 0, 0.5, 1),
+                       "omega" = c(2, 1.5, 1, 0.5),
+                     "alpha" = c(-2, -1, 1, 2))
 
-
-for(z in 1:length(xi_vec)){
-  xi <- xi_vec[z]
+for(z in 1:nrow(combos)){
+  xi <- combos$xi[z]
   for(y in 1:length(omega_vec)){
-    omega <- omega_vec[y]
+    omega <- combos$omega[y]
     for(x in 1:length(alpha_vec)){
-      alpha <- alpha_vec[x]
+      alpha <- combos$alpha[x]
 
   seed <- 43266432
 
@@ -96,7 +98,8 @@ df_result_true_list <- list()
 
 df_interp_list <- list()
 df <- df[df$TimefromBaseline < 16,]
-
+df_bs <- list()
+df_res <- list()
 for(j in 1:NBoots){
   print(j)
   set.seed((seed + j))
@@ -126,6 +129,18 @@ df_result <- get_Time_to_Positivity(data.frame(df_sample[df_sample$Z > minMeanin
 colnames(df_result) <- c("ID", "Estimate", "Time_to_Positivity")
 # colnames(df_result_true) <- c("ID", "Estimate_true", "Time_to_Positivity_true")
 
+# Store the actual_predicted_val from this iteration
+df_bs[[i]] <- data.frame("val_bs" = df_result$Estimate, 
+                         "time_bs" = df_result$Time_to_Positivity)
+interpolated_val <- vector("list", length(Time_Window))
+
+for(j in 1:length(Time_Window)){
+  
+  interpolated_val[[j]] <- approx( df_result$Time_to_Positivity, df_result$actual_predicted_val, as.numeric(Time_Window[j]))$y
+}
+df_res[[i]] <- data.frame("Time_Window" = Time_Window)
+
+df_res[[i]]$interpolated_val <- unlist(interpolated_val)
 
 #This is the non-modeled data
 df_excluded <- anti_join(df, df_sample)
@@ -214,7 +229,7 @@ if(nrow(merged_df) > 10){
     }
   }, by = run]
   
-  df_interp_list[[j]] <- df_interp
+  df_interp_list[[j]] <- interp
   
 }else{
   j <- j - 1
@@ -228,14 +243,14 @@ df_result <- rbindlist(df_result_list)
 
 
 
-saveRDS(df_result, paste0("./RDS_Simulation_HistogramVarying/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_ResultingCurves.RDS"))
-saveRDS(df_interp, paste0("./RDS_Simulation_HistogramVarying/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_InterpolatedCurves.RDS"))
+saveRDS(df_result, paste0("./Simulations20260424/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_ResultingCurves_withinabove0.RDS"))
+saveRDS(df_interp, paste0("./Simulations20260424/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_InterpolatedCurves_withinabove0.RDS"))
 
-saveRDS(MAE, paste0("./RDS_Simulation_HistogramVarying/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_MAE.RDS"))
+saveRDS(MAE, paste0("./Simulations20260424/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "_MAE_withinabove0.RDS"))
 
-saveRDS(RMSE, paste0("./RDS_Simulation_HistogramVarying/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "RMSE.RDS"))
+saveRDS(RMSE, paste0("./Simulations20260424/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "RMSE_withinabove0.RDS"))
 
-saveRDS(R2, paste0("./RDS_Simulation_HistogramVarying/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "R2.RDS"))
+saveRDS(R2, paste0("./Simulations20260424/PiB_alpha_", alpha, "_omega_", omega, "_xi_", xi, "R2_withinabove0.RDS"))
 
 
 
