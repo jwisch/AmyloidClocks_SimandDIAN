@@ -774,4 +774,157 @@ adjust_crossing_times <- function(df, mean_within_below = 0.44, sd_within_below 
     }) %>% ungroup()
 return(df_adjusted)}
 
-
+robust_bootstrap_get_Time_to_Positivity <- function(
+    df,
+    PET_pos_threshold,
+    id_name,
+    time_name,
+    value_name,
+    num_bootstraps = 1000,
+    bootstrap_percent = 0.8,
+    degree = 3,
+    printIter = TRUE
+) {
+  
+  Time_Window <- seq(from = -20, to = 20, by = 0.5)
+  unique_ids <- unique(df[[id_name]])
+  n_ids <- length(unique_ids)
+  
+  df_res <- vector("list", num_bootstraps)
+  
+  # --- SAFE ITERATION ---
+  safe_iteration <- function(i) {
+    tryCatch({
+      
+      # Sample IDs
+      sampled_idx <- sample(
+        seq_len(n_ids),
+        size = floor(bootstrap_percent * n_ids),
+        replace = TRUE
+      )
+      sampled_ids <- unique_ids[sampled_idx]
+      sampled_data <- df[df[[id_name]] %in% sampled_ids, ]
+      
+      # Model
+      result <- get_Time_to_Positivity(
+        sampled_data,
+        id_name,
+        time_name,
+        value_name,
+        PET_pos_threshold,
+        degree
+      )
+      
+      # Validate
+      if (is.null(result) ||
+          length(result$Time_to_Positivity) < 2 ||
+          length(result$actual_predicted_val) < 2 ||
+          all(is.na(result$Time_to_Positivity)) ||
+          all(is.na(result$actual_predicted_val))) {
+        return(NULL)
+      }
+      
+      # Interpolation
+      interpolated_val <- suppressWarnings(
+        sapply(Time_Window, function(t) {
+          approx(
+            result$Time_to_Positivity,
+            result$actual_predicted_val,
+            xout = t,
+            rule = 1,
+            ties = mean
+          )$y
+        })
+      )
+      
+      if (all(is.na(interpolated_val))) return(NULL)
+      
+      data.frame(
+        Time_Window = Time_Window,
+        interpolated_val = interpolated_val
+      )
+      
+    }, error = function(e) {
+      if (printIter) message("Iteration ", i, " failed: ", e$message)
+      return(NULL)
+    })
+  }
+  
+  # --- RUN LOOP (this WILL go to num_bootstraps) ---
+  for (i in seq_len(num_bootstraps)) {
+    if (printIter) print(i)
+    
+    # try() catches anything tryCatch misses (important)
+    res_i <- try(safe_iteration(i), silent = TRUE)
+    
+    if (inherits(res_i, "try-error") || is.null(res_i)) {
+      df_res[[i]] <- NULL
+    } else {
+      df_res[[i]] <- res_i
+    }
+  }
+  
+  # --- Diagnostics ---
+  num_failed <- sum(sapply(df_res, is.null))
+  message("Completed all iterations.")
+  message("Failed iterations: ", num_failed, " / ", num_bootstraps)
+  
+  df_res_clean <- df_res[!sapply(df_res, is.null)]
+  
+  if (length(df_res_clean) == 0) {
+    warning("All iterations failed.")
+    return(data.frame(
+      Time_to_Positivity = numeric(0),
+      Estimate = numeric(0),
+      CI_Lower = numeric(0),
+      CI_Upper = numeric(0)
+    ))
+  }
+  
+  # --- Aggregate ---
+  bootstrap_matrix <- do.call(rbind, df_res_clean)
+  
+  mean_result <- bootstrap_matrix %>%
+    dplyr::group_by(Time_Window) %>%
+    dplyr::summarize(
+      interpolated_val_mean = median(interpolated_val, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  sd_result <- bootstrap_matrix %>%
+    dplyr::group_by(Time_Window) %>%
+    dplyr::summarize(
+      interpolated_val_sd = sd(interpolated_val, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  ci_calc <- merge(mean_result, sd_result, by = "Time_Window")
+  
+  ci_df <- data.frame(
+    Time_to_Positivity = ci_calc$Time_Window,
+    Estimate = ci_calc$interpolated_val_mean,
+    CI_Lower = ci_calc$interpolated_val_mean - 1.96 * ci_calc$interpolated_val_sd,
+    CI_Upper = ci_calc$interpolated_val_mean + 1.96 * ci_calc$interpolated_val_sd
+  )
+  
+  # --- Threshold alignment ---
+  try({
+    if (all(is.finite(ci_df$Estimate)) &&
+        any(ci_df$Estimate < PET_pos_threshold) &&
+        any(ci_df$Estimate > PET_pos_threshold)) {
+      
+      adjustment <- approx(
+        ci_df$Estimate,
+        ci_df$Time_to_Positivity,
+        xout = PET_pos_threshold,
+        ties = mean
+      )$y
+      
+      if (!is.na(adjustment)) {
+        ci_df$Time_to_Positivity <- ci_df$Time_to_Positivity - adjustment
+      }
+    }
+  }, silent = TRUE)
+  
+  return(ci_df[, c("Time_to_Positivity", "Estimate", "CI_Lower", "CI_Upper")])
+}
