@@ -79,7 +79,7 @@ compute_zscore <- function(df, col_name) {
 }
 
 
-get_RofC_df <- function(df, id_name, value_name, time_name, flip_sign = FALSE) {
+get_RofC_df <- function(df, id_name, value_name, time_name, flip_sign = FALSE, modelType = "V") {
   
   # Define column symbols
   subject_col <- sym(id_name)
@@ -102,9 +102,9 @@ get_RofC_df <- function(df, id_name, value_name, time_name, flip_sign = FALSE) {
   RofC <- RofC[RofC$Z < 5 & RofC$Z > -5 & !is.na(RofC$Z), ]
   RofC <- RofC[, !names(RofC) %in% c("Z")]
   # Fit clustering model
-
+  
   fit <- Mclust(RofC[!is.na(RofC$rate_of_change), ]$rate_of_change, G = 2, 
-                model = "V")
+                model = modelType)
   
   # Assign classifications
   RofC$classification <- NA
@@ -127,6 +127,7 @@ get_RofC_df <- function(df, id_name, value_name, time_name, flip_sign = FALSE) {
   
   return(RofC)
 }
+
 
 
 get_relAccumFlag <- function(df, RofC_col_name, rel_accum) {

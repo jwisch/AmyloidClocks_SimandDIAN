@@ -53,7 +53,7 @@ df$Alamar_pTau181_Z <- (df$Alamar_pTau217 - mean(df[df$Mutation == 1 & !is.na(df
 
 ###############################################################################
 ###############################################################################
-##Fig 1: Biofluid vs CL and ROC curve
+##Supp Fig 2: Biofluid vs CL and ROC curve
 ###############################################################################
 ###############################################################################
 Apos_thresh_CL_Z <- approx(df$CL, df$CL_Z, 18)$y
@@ -112,7 +112,7 @@ grid.arrange(CSFpT217_Nico_Z_PET_Thresh$classification_plot + ggtitle("A."),
              Alamar_pTau181_Z_PET_Thresh$roc_plot + ggtitle("T.") , 
              layout_matrix = layout)
 
-graph2ppt(file = "./Figures/ThresholdsforApos.pptx", width = 18, height = 14)
+graph2ppt(file = "./Figures/SuppFig2.pptx", width = 18, height = 14)
 
 
 
