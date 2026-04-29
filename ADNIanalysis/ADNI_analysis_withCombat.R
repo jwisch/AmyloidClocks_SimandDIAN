@@ -3,7 +3,7 @@ library(lubridate)
 source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
-
+source("./functions_DistributionSpecificity.R")
 df <- read.csv(".././ADNI_Feb2026/PTDEMOG_24Feb2026.csv")
 
 df <- df[, c("PTID", "VISCODE", "VISDATE", "PTDOBYY", "PTGENDER")]
@@ -256,7 +256,7 @@ RofC_fits$modality <- c("PET", "Plasma")
 RofC_fits$Analyte <- c("PET", "pT217")
 RofC_fits$Assay <- c( "PET", "Fujirubio")
 
-ggplot(RofC_fits, aes(x = omega, y = xi, label = biomarker_col, colour = Assay,
+p2b <- ggplot(RofC_fits, aes(x = omega, y = xi, label = biomarker_col, colour = Assay,
                       shape = Analyte)) +
   geom_point(aes(size = alpha, alpha = 0.6)) + scale_colour_manual(values = c("#007B82", "#C77CFF",  "green", "black","#F8766D" )) +
   scale_shape_manual(values = c(19, 17,19)) +
@@ -296,12 +296,13 @@ p_pT217  <- get_TimefromAposPlot(result_pT217_Z, cp_pT217_Z$optimal_cutpoint,
 grid.arrange(p_PET, p_pT217, nrow = 2, ncol = 1)
 
 
+
 p_error_PET <- plot_threshold_crossings(matched, id_col = "PTID", age_col = "Age", 
-                                        value_col = "CL_Z", color_grad = NULL, 
+                                        value_col = "CL_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL, 
                                         XLIM = c(50, 90), YLIM = c(50, 90),
                                         XPOS = 70, YPOS = 65)
 p_error_pT217 <- plot_threshold_crossings(matched, id_col = "PTID", age_col = "Age", 
-                                          value_col = "pTau217_Z", color_grad = NULL, 
+                                          value_col = "pTau217_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL, 
                                           XLIM = c(50, 90), YLIM = c(50, 90),
                                           XPOS = 70, YPOS = 65)
 
@@ -313,7 +314,7 @@ results <- data.frame("Biomarker" = c("PET", "PlasmapT217/AB42"),
 
 
 
-results %>%
+p3b <- results %>%
   mutate(Biomarker = forcats::fct_reorder(Biomarker, MAE, .fun = mean)) %>%
   ggplot(aes(x = Biomarker, y = MAE, shape = Modality, colour = Modality)) +
   geom_point(size = 3) +
@@ -324,3 +325,46 @@ results %>%
   ) + geom_hline(yintercept = 2, linetype = "dashed") +
   scale_colour_manual(values = c("black", "#007B82", "#F8766D")) +
   scale_shape_manual(values = c(19, 3,17)) + xlab("") + ylab("Mean Average Error (Years)")
+
+
+# result_PET_dist_Z <- bs_DistSpecplot(data.frame(matched), Apos_thresh_CL_Z,
+#                               "PTID", "TimefromBaseline",
+#                                "CL_Z", num_bootstraps = 1000)
+# 
+# result_pT217_dist_Z <- bs_DistSpecplot(data.frame(matched), cp_PET_pT217_obj[[3]]$optimal_cutpoint,
+#                                        "PTID", "TimefromBaseline",
+#                                       "pTau217_Z", num_bootstraps = 1000)
+# 
+# saveRDS(result_PET_dist_Z, "./Data/result_PET_dist_Z.RDS")
+# saveRDS(result_pT217_dist_Z, "./Data/result_pT217_dist_Z.RDS")
+
+result_PET_dist_Z <- readRDS("./Data/result_PET_dist_Z.RDS")
+result_pT217_dist_Z <- readRDS("./Data/result_pT217_dist_Z.RDS")
+
+
+p_4_PET <- plot_hist_density_at_time(data = result_PET_dist_Z, rel_accum = -20, 
+                                time_vals = c(0, 2, 4, 6),
+                                binwidth = 0.01,
+                                color_vec =   c("#003B44",   # darker lead-in
+                                                "#007B82",   # 2nd (your first required color)
+                                                "#00BFC4",   # 3rd (your second required color)
+                                                "#6FE3E6",   # lighter continuation
+                                                "#CFF7F8") ,  # very light endpoint
+                                "Amyloid PET")
+
+
+p_4_plasma <- plot_hist_density_at_time(data = result_pT217_dist_Z, rel_accum = -20, 
+                          time_vals = c(0, 2, 4, 6),
+                          binwidth = 0.01,
+                          color_vec =   c(
+                            "#A93E36",  # darkest
+                            "#F8766D",  # 2nd darkest (your anchor)
+                            "#FB9A93",
+                            "#FDC1BD",
+                            "#FFE5E3"   # lightest
+                          ) ,  # very light endpoint
+                          "Plasma pT217/AB42 [Fujirubio]")
+layout_matrix <- rbind(c(1, 1), c(2, 2), c(3, 4))
+grid.arrange(p2b, p3b, p_4_PET, p_4_plasma, layout_matrix = layout_matrix)
+grid.arrange(p_PET, p_error_PET[[1]],
+             p_pT217, p_error_pT217[[1]], nrow = 2, ncol = 2)
