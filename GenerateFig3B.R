@@ -68,16 +68,7 @@ df$TimefromApos_BD.pTau.217_Z <- approx(y = result_PET_BD.pTau.217_Z$Time_to_Pos
                                         x = result_PET_BD.pTau.217_Z$Estimate, xout = df$BD.pTau.217_Z)$y
 #now shifting to plotting these results
 
-get_TimefromAposPlot <- function(result_df, cp, YLAB){
-  p <- ggplot(result_df[result_df$Estimate > cp,], 
-              aes(x = Time_to_Positivity, y = Estimate, 
-                  ymin = CI_Lower, ymax = CI_Upper)) +
-    geom_line() + geom_ribbon(alpha = 0.3) + theme_bw() + 
-    xlab("Estimated time from A+") + ylab(YLAB) +
-    xlim(c(-10, 20)) 
-  return(p)
-  
-}
+
 
 p_CSF_217 <- get_TimefromAposPlot(result_PET_CSFpT217_Nico_Z, cp_CSFpT217_Nico_Z$optimal_cutpoint, 
                                   "CSF pTau217 - Nico Z")
@@ -121,111 +112,6 @@ graph2ppt(file = "./Figures/BootstrappedAmyloidTimeResults_20260420.pptx", width
 ##################################################################################
 
 ##Getting observed conversion
-
-get_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 2.6) {
-  # Ensure dplyr is available
-  if (!requireNamespace("dplyr", quietly = TRUE)) {
-    stop("Package 'dplyr' is required. Please install it with install.packages('dplyr').")
-  }
-  
-  df %>%
-    dplyr::arrange(.data[[id_col]], .data[[age_col]]) %>%
-    dplyr::group_by(.data[[id_col]]) %>%
-    dplyr::summarise(
-      cross_age = {
-        valid <- stats::complete.cases(.data[[value_col]], .data[[age_col]])
-        x <- .data[[age_col]][valid]
-        y <- .data[[value_col]][valid]
-        
-        if (any(y < threshold) & any(y > threshold)) {
-          stats::approx(x = y, y = x, xout = threshold)$y
-        } else {
-          NA_real_
-        }
-      },
-      .groups = "drop"
-    )
-}
-
-plot_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 2.6) {
-  
-  # Get threshold crossings
-  crossings <- get_threshold_crossings(
-    df = df,
-    id_col = id_col,
-    age_col = age_col,
-    value_col = value_col,
-    threshold = threshold
-  )
-  
-  # Merge crossings with original data
-  df <- merge(df, crossings[!is.na(crossings$cross_age), ], 
-              by.x = id_col, by.y = id_col, all = TRUE)
-  
-  # Compute observed crossing age
-  df$observed_cross_age <- df[[age_col]] - df$TimefromApos_Z
-  
-  # Subset for unique IDs for plotting
-  df_unique <- df[!duplicated(df[[id_col]]), ]
-  
-  # Define color limits
-  eyo_vals <- df_unique$DIAN_EYO[!is.na(df_unique$cross_age)]
-  color_limits <- c(floor(min(eyo_vals)), ceiling(max(eyo_vals)))
-  # Calculate MAE and RMSE for annotation
-  mae_val <- round(MLmetrics::MAE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
-                                  df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
-  rmse_val <- round(MLmetrics::RMSE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
-                                    df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
-  
-  # Build plot
-  p <- ggplot(df_unique, aes(x = observed_cross_age, y = cross_age, group = .data[[id_col]], colour = DIAN_EYO)) +
-    theme_bw() +
-    geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "black") +
-    xlim(c(23, 57)) +
-    ylim(c(23, 57)) +
-    scale_color_gradient(low = "#00008B", high = "red", 
-                         limits = color_limits,
-                         oob = scales::squish,
-                         name = "EYO") +
-    ylab("Predicted Age at Conversion") +
-    xlab("Observed Age at Conversion") +
-    theme(legend.position = "bottom") +
-    annotate(
-      geom = "label",
-      x = 38,
-      y = 33,
-      hjust = 0,
-      vjust = 1,
-      label = paste0("MAE = ", mae_val, " years\nRMSE = ", rmse_val, " years"),
-      fill = "#FFD700",
-      color = "black",
-      label.size = 0.3,
-      label.r = unit(0.15, "lines")
-    ) + geom_point()
-  
-  return(list(p, mae_val))
-}
-
-id_col <- "newid18"
-age_col <- "VISITAGEc"
-value_col <- "Alamar_pTau181_Z"
-threshold <- cp_PET_Alamar_pTau181_obj[[3]]$optimal_cutpoint
-
-crossings <- get_threshold_crossings(
-  df = df,
-  id_col = id_col,
-  age_col = age_col,
-  value_col = value_col,
-  threshold = threshold
-)
-
-crossings_CSF <- get_threshold_crossings(
-  df = df,
-  id_col = id_col,
-  age_col = age_col,
-  value_col = "AlamarCSF_pTau181_Z",
-  threshold = cp_PET_AlamarCSF_pTau181_obj[[3]]$optimal_cutpoint
-)
 
 
 p_error_CSFpT217_Nico <- plot_threshold_crossings(df, id_col = "newid18", age_col = "VISITAGEc", 
@@ -281,18 +167,7 @@ results <- data.frame("Biomarker" = c("PiB", "CSFpT217_IPMS", "CSFpT217_Alamar",
                                 p_error_BD.pTau.217_Z[[2]]),
                       "Modality" = c("PET", "CSF", "CSF", "Plasma", "Plasma", 
                                      "CSF", "CSF", "Plasma", "CSF", "Plasma", "Plasma", "CSF"))
-results <- data.frame("Biomarker" = c("PiB", "CSFpT217_IPMS", "CSFpT217_Alamar",
-                                      "PlasmapT217_Alamar", "PlasmapT217_IPMS",
-                                      "CSFpT181_IPMS", "CSFpT181_Alamar", "PlasmapT181_Alamar",
-                                      "CSFpT181_Lumipulse", "PlasmapT181_IPMS", "PlasmapT181_Simoa",
-                                      "CSFBDpT181"),
-                      "MAE" = c(p_error_pib[[2]],
-                                p_error_CSFpT217_Nico[[2]],  p_error_AlamarCSF_pTau217[[2]], p_error_Alamar_pTau217[[2]], p_error_plasmapTau217_Nico[[2]],
-                                p_error_CSFpT181_Nico[[2]], p_error_AlamarCSF_pTau181[[2]], p_error_Alamar_pTau181[[2]],
-                                p_error_LumipulseCSF_pTau181[[2]],p_error_plasmapTau181_Nico[[2]], p_error_plasmapTau181_jucker[[2]],
-                                p_error_BD.pTau.217_Z[[2]]),
-                      "Modality" = c("PET", "CSF", "CSF", "Plasma", "Plasma", 
-                                     "CSF", "CSF", "Plasma", "CSF", "Plasma", "Plasma", "CSF"))
+
 
 
 results %>%
