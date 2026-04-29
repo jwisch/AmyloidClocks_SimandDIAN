@@ -1,5 +1,6 @@
 library(data.table)
 library(lubridate)
+library(sva)
 source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
@@ -9,6 +10,55 @@ df <- read.csv(".././ADNI_Feb2026/PTDEMOG_24Feb2026.csv")
 df <- df[, c("PTID", "VISCODE", "VISDATE", "PTDOBYY", "PTGENDER")]
 df <- df[!(df$PTID) %like% "381_S_",]
 
+
+# alamar <- read.csv(".././ADNI_Feb2026/BSHRI_PLA_CSF_NULISA_CNS_24Feb2026.csv")
+# alamar <- alamar[alamar$Target %in% c("pTau-217", "pTau-181"),]
+# alamar <- alamar[alamar$SampleMatrixType == "CSF",]
+# longitudinal_ala <- setDT(alamar)[, .N, by = "PTID"]
+# longitudinal_ala <- longitudinal_ala[longitudinal_ala$N > 1,]
+# 
+# 
+# 
+# alamar_181 <- alamar[alamar$Target == "pTau-181", c("PTID", "EXAMDATE", "VISCODE", "PlateID", "NPQ")]
+# alamar_217 <- alamar[alamar$Target == "pTau-217", c("PTID", "VISCODE", "NPQ")]
+# 
+# ala <- merge(alamar_181, alamar_217, by = c("PTID", "VISCODE"))
+# colnames(ala)[5:6] <- c("pT181", "pT217") 
+# 
+# ##COMBAT ON ALAMAR DATA
+# # 1. Extract numeric biomarker matrix
+# dat <- ala %>%
+#   select(pT181, pT217) %>%
+#   as.matrix()
+# 
+# # 2. Transpose: features x samples
+# dat_t <- t(dat)
+# 
+# # 3. Define batch variable
+# batch <- factor(ala$PlateID)
+# 
+# # 4. Run ComBat
+# combat_corrected <- ComBat(
+#   dat = dat_t,
+#   batch = batch,
+#   par.prior = TRUE,
+#   prior.plots = FALSE
+# )
+# 
+# # 5. Transpose back to original shape
+# corrected_df <- t(combat_corrected) %>% as.data.frame()
+# 
+# # 6. Reattach metadata
+# ala_corrected <- ala %>%
+#   select(PTID, VISCODE, EXAMDATE, PlateID) %>%
+#   bind_cols(corrected_df)
+# 
+# ala_corrected <- ala_corrected[!duplicated(ala_corrected),]
+# 
+# 
+# rm(ala, alamar, alamar_181, alamar_217, combat_corrected, corrected_df, dat, dat_t)
+# 
+# colnames(ala_corrected)[5:6] <- c("Alamar_pT181", "Alamar_pT217")
 apoe <- read.csv(".././ADNI_Feb2026/APOERES_24Feb2026.csv")
 apoe <- apoe[, c("PTID", "GENOTYPE")]
 apoe <- apoe[!duplicated(apoe),]
@@ -110,23 +160,55 @@ matched <- merge(final_merged, mmse, by = c("PTID", "VISDATE"),
                  all = FALSE)
 matched <- merge(matched, cdr, by = c("PTID", "VISDATE"),
              all = FALSE)
+
+
+
+# source("./ADNIanalysis/cleanADNIAlamardata.R")
+
 mean_CL <- mean(matched[matched$CDGLOBAL == 0 & matched$TimefromBaseline == 0,]$CENTILOIDS.combat, na.rm = TRUE)
 sd_CL <- sd(matched[matched$CDGLOBAL == 0 & matched$TimefromBaseline == 0,]$CENTILOIDS.combat, na.rm = TRUE)
 
 mean_pT <- mean(matched[matched$CDGLOBAL == 0 & matched$TimefromBaseline == 0,]$pT217_AB42_F, na.rm = TRUE)
 sd_pT <- sd(matched[matched$CDGLOBAL == 0 & matched$TimefromBaseline == 0,]$pT217_AB42_F, na.rm = TRUE)
 
+# mean_Alamar_pT181 <- mean(ala[ala$CDGLOBAL == 0 & ala$TimefromBaseline == 0,]$Alamar_pT181, na.rm = TRUE)
+# sd_Alamar_pT181 <- sd(ala[ala$CDGLOBAL == 0 & ala$TimefromBaseline == 0,]$Alamar_pT181, na.rm = TRUE)
+# 
+# mean_Alamar_pT217 <- mean(ala[ala$CDGLOBAL == 0 & ala$TimefromBaseline == 0,]$Alamar_pT217, na.rm = TRUE)
+# sd_Alamar_pT217 <- sd(ala[ala$CDGLOBAL == 0 & ala$TimefromBaseline == 0,]$Alamar_pT217, na.rm = TRUE)
+
 matched$CL_Z <- (matched$CENTILOIDS.combat - mean_CL) / sd_CL
 matched$pTau217_Z <- (matched$pT217_AB42_F - mean_pT) / sd_pT
 
+# ala$CL_Z <- (ala$CL.combat - mean_CL) / sd_CL
+# ala$Alamar_pT181_Z <- (ala$Alamar_pT181 - mean_Alamar_pT181) / sd_Alamar_pT181
+# ala$Alamar_pT217_Z <- (ala$Alamar_pT217 - mean_Alamar_pT217) / sd_Alamar_pT217
+
+
 Apos_thresh_CL_Z <- approx(matched$CENTILOIDS.combat, matched$CL_Z, 18)$y
 matched$Apos <- ifelse(matched$CL_Z > Apos_thresh_CL_Z, 1, 0)
+# ala$Apos <- ifelse(ala$CL_Z > Apos_thresh_CL_Z, 1, 0)
 
+###################
+##PICK UP HERE AND RUN ALAMAR STUFF
+###################
 pT217_Z_PET_Thresh <- run_cutpointr_analysis(matched, "pTau217_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
                                                       "Centiloids, Amyloid PET (Z)", "Plasma pTau217 / AB42 (Z)")
+# Alamar_pT181_Z_PET_Thresh <- run_cutpointr_analysis(ala, "Alamar_pT181_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
+#                                                     "Centiloids, Amyloid PET (Z)", "Alamar Plasma pTau181 (Z)")
+# Alamar_pT217_Z_PET_Thresh <- run_cutpointr_analysis(ala, "Alamar_pT217_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
+#                                              "Centiloids, Amyloid PET (Z)", "Alamar Plasma pTau217 (Z)")
 
 RofC_PET_Z <- get_RofC_df(matched, "PTID", "CL_Z", "TimefromBaseline")
 RofC_pT217_Z <- get_RofC_df(matched, "PTID", "pTau217_Z", "TimefromBaseline")
+
+# longitudinal_ala <- setDT(ala)[, .N, by = "PTID"]
+# longitudinal_ala <- longitudinal_ala[longitudinal_ala$N > 1,]
+# 
+# RofC_Alamar_pT181_Z <- get_RofC_df(data.frame(ala), "PTID", "Alamar_pT181_Z", "TimefromBaseline")
+# RofC_Alamar_pT217_Z <- get_RofC_df(ala, "PTID", "Alamar_pT217_Z", "TimefromBaseline")
+
+
 
 rel_accum_PET_Z <- mean(max(RofC_PET_Z[RofC_PET_Z$classification == 1,]$rate_of_change),
                         min(RofC_PET_Z[RofC_PET_Z$classification == 2,]$rate_of_change))
@@ -368,3 +450,14 @@ layout_matrix <- rbind(c(1, 1), c(2, 2), c(3, 4))
 grid.arrange(p2b, p3b, p_4_PET, p_4_plasma, layout_matrix = layout_matrix)
 grid.arrange(p_PET, p_error_PET[[1]],
              p_pT217, p_error_pT217[[1]], nrow = 2, ncol = 2)
+
+
+
+
+
+
+
+
+
+
+

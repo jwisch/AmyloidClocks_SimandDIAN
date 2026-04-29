@@ -102,7 +102,13 @@ get_RofC_df <- function(df, id_name, value_name, time_name, flip_sign = FALSE, m
   RofC <- RofC[RofC$Z < 5 & RofC$Z > -5 & !is.na(RofC$Z), ]
   RofC <- RofC[, !names(RofC) %in% c("Z")]
   # Fit clustering model
+  rate_vals <- RofC$rate_of_change
+  rate_vals <- rate_vals[is.finite(rate_vals)]
   
+  if (length(rate_vals) < 5) {
+    RofC$classification <- NA
+    return(RofC)
+  }
   fit <- Mclust(RofC[!is.na(RofC$rate_of_change), ]$rate_of_change, G = 2, 
                 model = modelType)
   
@@ -927,4 +933,130 @@ robust_bootstrap_get_Time_to_Positivity <- function(
   }, silent = TRUE)
   
   return(ci_df[, c("Time_to_Positivity", "Estimate", "CI_Lower", "CI_Upper")])
+}
+
+
+run_batch_PCA_QC <- function(
+    ala_plasma,
+    col_start,
+    col_end,
+    id_col = "newid18"
+) {
+  library(dplyr)
+  library(tibble)
+  library(mclust)
+  library(sva)
+  
+  # ------------------------------ #
+  # 1. SELECT & CLEAN PROTEIN DATA
+  # ------------------------------ #
+  
+  protein_data <- ala_plasma %>%
+    dplyr::select(all_of(id_col), all_of(col_start):all_of(col_end)) %>%
+    mutate(across(-all_of(id_col), as.numeric))
+  
+  protein_data <- protein_data[complete.cases(protein_data), ]
+  
+  # --------------------------------------------- #
+  # 2. FIRST PCA → compute batch clusters (Mclust)
+  # --------------------------------------------- #
+  
+  pca_obj <- prcomp(protein_data[, -1], scale. = TRUE)
+  pca <- as.data.frame(pca_obj$x)
+  pca$Participant_ID <- protein_data[[id_col]]
+  
+  Vstdiv <- c(mean(pca$PC1) - 3 * sd(pca$PC1), mean(pca$PC1) + 3 * sd(pca$PC1))
+  Hstdiv <- c(mean(pca$PC2) - 3 * sd(pca$PC2), mean(pca$PC2) + 3 * sd(pca$PC2))
+  
+  # Mclust classification
+  fit <- Mclust(pca[, c("PC1", "PC2")], G = 2)
+  pca$batch <- as.factor(fit$classification)
+  
+  # -------------------------- #
+  # 3. PREPARE COMBAT MATRIX
+  # -------------------------- #
+  
+  complete_rows <- ala_plasma %>%
+    select(all_of(col_start):all_of(col_end)) %>%
+    mutate(across(everything(), as.numeric)) %>%
+    complete.cases()
+  
+  combat_data <- ala_plasma %>%
+    select(all_of(col_start):all_of(col_end)) %>%
+    mutate(across(everything(), as.numeric)) %>%
+    filter(complete_rows) %>%
+    as.matrix() %>%
+    t()
+  
+  combat_data <- apply(combat_data, 2, as.numeric) %>%
+    matrix(nrow = nrow(combat_data))
+  
+  batch <- factor(pca$batch)
+  
+  combat_corrected <- ComBat(
+    dat = combat_data,
+    batch = batch,
+    par.prior = TRUE,
+    prior.plots = FALSE
+  )
+  
+  # ---------------------------------------- #
+  # 4. RECONSTRUCT CLEAN DATAFRAME AFTER COMBAT
+  # ---------------------------------------- #
+  
+  protein_adjusted <- t(combat_corrected) %>% as.data.frame()
+  
+  colnames(protein_adjusted) <- names(ala_plasma)[
+    match(col_start, names(ala_plasma)) :
+      match(col_end, names(ala_plasma))
+  ]
+  
+  IDs <- ala_plasma[[id_col]][complete_rows]
+  visits <- ala_plasma$visit[complete_rows]
+  
+  data_pca <- protein_adjusted %>%
+    as.data.frame() %>%
+    tibble::rownames_to_column(var = "Participant_ID")
+  
+  data_pca$Participant_ID <- IDs
+  data_pca$visit <- visits
+  
+  # ---------------- #
+  # 5. SECOND PCA QC
+  # ---------------- #
+  
+  protein_clean <- data_pca %>%
+    select(all_of(col_start):all_of(col_end)) %>%
+    mutate(across(everything(), as.numeric))
+  
+  pca_obj2 <- prcomp(protein_clean, scale. = TRUE)
+  pca2 <- as.data.frame(pca_obj2$x)
+  
+  pca2$Participant_ID <- data_pca$Participant_ID
+  pca2$visit <- data_pca$visit
+  
+  Vstdiv2 <- c(mean(pca2$PC1) - 3 * sd(pca2$PC1), mean(pca2$PC1) + 3 * sd(pca2$PC1))
+  Hstdiv2 <- c(mean(pca2$PC2) - 3 * sd(pca2$PC2), mean(pca2$PC2) + 3 * sd(pca2$PC2))
+  
+  # Remove outliers
+  keep_ids2 <- pca2 %>%
+    filter(
+      PC1 >= Vstdiv2[1], PC1 <= Vstdiv2[2],
+      PC2 >= Hstdiv2[1], PC2 <= Hstdiv2[2]
+    ) %>%
+    pull(Participant_ID)
+  
+  # ------------------------- #
+  # 6. FINAL CLEANED DATAFRAME
+  # ------------------------- #
+  
+  Ances_ds_after_QC <- data_pca %>%
+    filter(Participant_ID %in% keep_ids2)
+  
+  # rename back to original id column
+  colnames(Ances_ds_after_QC)[colnames(Ances_ds_after_QC) == "Participant_ID"] <- id_col
+  
+  Ances_ds_after_QC <- Ances_ds_after_QC[!duplicated(Ances_ds_after_QC), ]
+  
+  return(Ances_ds_after_QC)
 }
