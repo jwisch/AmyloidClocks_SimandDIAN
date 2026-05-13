@@ -193,21 +193,24 @@ plot_lmer_by_class <- function(df, yvar, class_col, xlab = "Time from baseline (
 }
 
 
-define_baseline_rel_to_RelAccum <- function(df, col_name, cp_obj, thresh_col_name = "ReliableAccumThresh") {
+define_baseline_rel_to_RelAccum <- function(df, col_name, cp_obj, thresh_col_name = "ReliableAccumThresh",
+                                            id_col = "newid18", age_col = "VISITAGEc") {
   
   col_sym <- sym(col_name)
   thresh_sym <- sym(thresh_col_name)
+  id_sym <- sym(id_col)
+  age_sym <- sym(age_col)
   # Get the earliest visit value per newid18
   earliest_vals <- df %>%
     filter(!is.na(!!col_sym)) %>%
-    group_by(newid18) %>%
-    slice_min(VISITAGEc, with_ties = FALSE) %>%
+    group_by(!!id_sym) %>%
+    slice_min(!!age_sym, with_ties = FALSE) %>%
     ungroup() %>%
-    select(newid18, val_at_min_age = !!col_sym)
+    select(!!id_sym, val_at_min_age = !!col_sym)
   
   # Merge back and define ReliableAccumThresh
   df <- df %>%
-    left_join(earliest_vals, by = "newid18") %>%
+    left_join(earliest_vals, by = id_col) %>%
     mutate(
       !!thresh_sym := case_when(
         is.na(val_at_min_age) ~ NA_real_,
@@ -219,7 +222,6 @@ define_baseline_rel_to_RelAccum <- function(df, col_name, cp_obj, thresh_col_nam
   
   return(df)
 }
-
 
 combine_RofC_and_df <- function(df, biomarker_col, RofC_df, RofC_col, rel_accum,
                                 ID_col, age_col, gender_col) {
