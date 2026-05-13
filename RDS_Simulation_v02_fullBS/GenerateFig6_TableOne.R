@@ -450,64 +450,6 @@ get_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 
     )
 }
 
-plot_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 2.6) {
-  
-  # Get threshold crossings
-  crossings <- get_threshold_crossings(
-    df = df,
-    id_col = id_col,
-    age_col = age_col,
-    value_col = value_col,
-    threshold = threshold
-  )
-  
-  # Merge crossings with original data
-  df <- merge(df, crossings[!is.na(crossings$cross_age), ], 
-              by.x = id_col, by.y = id_col, all = TRUE)
-  
-  # Compute observed crossing age
-  df$observed_cross_age <- df[[age_col]] - df$TimefromApos_Z
-  
-  # Subset for unique IDs for plotting
-  df_unique <- df[!duplicated(df[[id_col]]), ]
-  
-  # Define color limits
-  eyo_vals <- df_unique$DIAN_EYO[!is.na(df_unique$cross_age)]
-  color_limits <- c(floor(min(eyo_vals)), ceiling(max(eyo_vals)))
-  # Calculate MAE and RMSE for annotation
-  mae_val <- round(MLmetrics::MAE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
-                       df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
-  rmse_val <- round(MLmetrics::RMSE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
-                         df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
-  
-  # Build plot
-  p <- ggplot(df_unique, aes(x = observed_cross_age, y = cross_age, group = .data[[id_col]], colour = DIAN_EYO)) +
-    theme_bw() +
-    geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "black") +
-    xlim(c(23, 57)) +
-    ylim(c(23, 57)) +
-    scale_color_gradient(low = "#00008B", high = "red", 
-                         limits = color_limits,
-                         oob = scales::squish,
-                         name = "EYO") +
-    ylab("Predicted Age at Conversion") +
-    xlab("Observed Age at Conversion") +
-    theme(legend.position = "bottom") +
-    annotate(
-      geom = "label",
-      x = 38,
-      y = 33,
-      hjust = 0,
-      vjust = 1,
-      label = paste0("MAE = ", mae_val, " years\nRMSE = ", rmse_val, " years"),
-      fill = "#FFD700",
-      color = "black",
-      label.size = 0.3,
-      label.r = unit(0.15, "lines")
-    ) + geom_point()
-  
-  return(p)
-}
 
 
 

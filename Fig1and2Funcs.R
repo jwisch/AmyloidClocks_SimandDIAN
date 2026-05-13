@@ -131,13 +131,15 @@ run_cutpointr_analysis <- function(df, biomarker, outcome, y1, y2,
 }
 
 
-plot_lmer_by_class <- function(df, yvar, class_col, xlab = "Time from baseline (years)", ylab = "Biomarker (Z)") {
+plot_lmer_by_class <- function(df, yvar, class_col, xlab = "Time from baseline (years)", ylab = "Biomarker (Z)",
+                               id_col = "newid18") {
   
   y_sym <- sym(yvar)
   class_sym <- sym(class_col)
+  id_col <- sym(id_col)
   
   plot_full <- ggplot(df,
-         aes(x = TimefromBaseline, y = !!y_sym, group = newid18)) +
+         aes(x = TimefromBaseline, y = !!y_sym, group = !!id_col)) +
     geom_point() +
     geom_line(alpha = 0.6) +
     theme_bw() +
@@ -146,7 +148,7 @@ plot_lmer_by_class <- function(df, yvar, class_col, xlab = "Time from baseline (
   
   make_plot <- function(class_value) {
     # Fit mixed model
-    mod <- lmer(as.formula(paste(yvar, "~ TimefromBaseline + (1 | newid18)")),
+    mod <- lmer(as.formula(paste0(yvar, "~ TimefromBaseline + (1 | ", id_col, ")")),
                 data = df %>% filter(!!class_sym == class_value))
     
     # Predictions over time range
@@ -168,7 +170,7 @@ plot_lmer_by_class <- function(df, yvar, class_col, xlab = "Time from baseline (
     
     # Plot
     ggplot(df %>% filter(!!class_sym == class_value),
-           aes(x = TimefromBaseline, y = !!y_sym, group = newid18)) +
+           aes(x = TimefromBaseline, y = !!y_sym, group = !!id_col)) +
       geom_point() +
       geom_line(alpha = 0.6) +
       geom_line(data = pred_df, aes(y = fit, x = TimefromBaseline),
@@ -222,6 +224,97 @@ define_baseline_rel_to_RelAccum <- function(df, col_name, cp_obj, thresh_col_nam
   
   return(df)
 }
+
+get_TimefromAposPlot <- function(result_df, cp, YLAB){
+  p <- ggplot(result_df[result_df$Estimate > cp,], 
+              aes(x = Time_to_Positivity, y = Estimate, 
+                  ymin = CI_Lower, ymax = CI_Upper)) +
+    geom_line() + geom_ribbon(alpha = 0.3) + theme_bw() + 
+    xlab("Estimated time from A+") + ylab(YLAB) +
+    xlim(c(-10, 20)) 
+  return(p)
+  
+}
+
+get_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 2.6) {
+  # Ensure dplyr is available
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    stop("Package 'dplyr' is required. Please install it with install.packages('dplyr').")
+  }
+  
+  df %>%
+    dplyr::arrange(.data[[id_col]], .data[[age_col]]) %>%
+    dplyr::group_by(.data[[id_col]]) %>%
+    dplyr::summarise(
+      cross_age = {
+        valid <- stats::complete.cases(.data[[value_col]], .data[[age_col]])
+        x <- .data[[age_col]][valid]
+        y <- .data[[value_col]][valid]
+        
+        if (any(y < threshold) & any(y > threshold)) {
+          stats::approx(x = y, y = x, xout = threshold)$y
+        } else {
+          NA_real_
+        }
+      },
+      .groups = "drop"
+    )
+}
+
+plot_threshold_crossings <- function(df, id_col, age_col, value_col, threshold = 2.6,
+                                     XLIM = c(23, 57), YLIM = c(23, 57), XPOS = 38, YPOS = 33) {
+  
+  # Get threshold crossings
+  crossings <- get_threshold_crossings(
+    df = df,
+    id_col = id_col,
+    age_col = age_col,
+    value_col = value_col,
+    threshold = threshold
+  )
+  
+  # Merge crossings with original data
+  df <- merge(df, crossings[!is.na(crossings$cross_age), ], 
+              by.x = id_col, by.y = id_col, all = TRUE)
+  
+  # Compute observed crossing age
+  df$observed_cross_age <- df[[age_col]] - df$TimefromApos_Z
+  
+  # Subset for unique IDs for plotting
+  df_unique <- df[!duplicated(df[[id_col]]), ]
+  
+  # Define color limits
+
+  # Calculate MAE and RMSE for annotation
+  mae_val <- round(MLmetrics::MAE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
+                                  df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
+  rmse_val <- round(MLmetrics::RMSE(df_unique$observed_cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)], 
+                                    df_unique$cross_age[!is.na(df_unique$cross_age) & !is.na(df_unique$observed_cross_age)]), 2)
+  
+  # Build plot
+  p <- ggplot(df_unique, aes(x = observed_cross_age, y = cross_age, group = .data[[id_col]])) +
+    theme_bw() +
+    geom_abline(intercept = 0, slope = 1, linetype = "dashed", colour = "black") +
+    ylab("Predicted Age at Conversion") +
+    xlab("Observed Age at Conversion") +
+    theme(legend.position = "bottom") +
+    annotate(
+      geom = "label",
+      x = XPOS,
+      y = YPOS,
+      hjust = 0,
+      vjust = 1,
+      label = paste0("MAE = ", mae_val, " years\nRMSE = ", rmse_val, " years"),
+      fill = "#FFD700",
+      color = "black",
+      label.size = 0.3,
+      label.r = unit(0.15, "lines")
+    ) + geom_point() +
+    xlim(XLIM) + ylim(YLIM)
+  
+  return(list(p, mae_val, rmse_val))
+}
+
 
 combine_RofC_and_df <- function(df, biomarker_col, RofC_df, RofC_col, rel_accum,
                                 ID_col, age_col, gender_col) {

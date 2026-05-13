@@ -373,8 +373,8 @@ p2b <- ggplot(RofC_fits, aes(x = omega, y = xi, label = biomarker_col, colour = 
 # saveRDS(result_PET_Z, "./Data/result_PET_Z_ADNI.RDS")
 # saveRDS(result_pT217_Z, "./Data/result_pT217_Z_ADNI.RDS")
 
-result_PET_Z <- readRDS("./Data/result_PET_Z_ADNI.RDS")
-result_pT217_Z <- readRDS("./Data/result_pT217_Z_ADNI.RDS")
+result_PET_Z <- readRDS("../Alamar_AmyloidClocks/Data/result_PET_Z_ADNI.RDS")
+result_pT217_Z <- readRDS("../Alamar_AmyloidClocks/Data/result_pT217_Z_ADNI.RDS")
 
 
 matched$TimefromApos_Z <- approx(y = result_PET_Z$Time_to_Positivity, x = result_PET_Z$Estimate, xout = matched$CL_Z)$y
@@ -391,13 +391,13 @@ grid.arrange(p_PET, p_pT217, nrow = 2, ncol = 1)
 
 
 p_error_PET <- plot_threshold_crossings(data.frame(matched), id_col = "PTID", age_col = "Age", 
-                                        value_col = "CL_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL, 
-                                        XLIM = c(50, 90), YLIM = c(50, 90),
+                                        value_col = "CL_Z", threshold = Apos_thresh_CL_Z, 
+                                        XLIM = c(60, 90), YLIM = c(60, 90),
                                         XPOS = 70, YPOS = 65)
 p_error_pT217 <- plot_threshold_crossings(matched, id_col = "PTID", age_col = "Age", 
-                                          value_col = "pTau217_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL)#, 
-                                          # XLIM = c(50, 90), YLIM = c(50, 90),
-                                          # XPOS = 70, YPOS = 65)
+                                          value_col = "pTau217_Z", threshold = Apos_thresh_CL_Z, 
+                                          XLIM = c(60, 90), YLIM = c(60, 90),
+                                          XPOS = 70, YPOS = 65)
 
 
 results <- data.frame("Biomarker" = c("PET", "PlasmapT217/AB42"),
@@ -428,11 +428,11 @@ p3b <- results %>%
 #                                        "PTID", "TimefromBaseline",
 #                                       "pTau217_Z", num_bootstraps = 1000)
 # 
-# saveRDS(result_PET_dist_Z, "./Data/result_PET_dist_Z.RDS")
-# saveRDS(result_pT217_dist_Z, "./Data/result_pT217_dist_Z.RDS")
+# saveRDS(result_PET_dist_Z, "../Alamar_AmyloidClocks/Data/result_PET_dist_Z.RDS")
+# saveRDS(result_pT217_dist_Z, "../Alamar_AmyloidClocks/Data/result_pT217_dist_Z.RDS")
 
-result_PET_dist_Z <- readRDS("./Data/result_PET_dist_Z.RDS")
-result_pT217_dist_Z <- readRDS("./Data/result_pT217_dist_Z.RDS")
+result_PET_dist_Z <- readRDS("../Alamar_AmyloidClocks/Data/result_PET_dist_Z.RDS")
+result_pT217_dist_Z <- readRDS("../Alamar_AmyloidClocks/Data/result_pT217_dist_Z.RDS")
 
 
 p_4_PET <- plot_hist_density_at_time(data = result_PET_dist_Z, rel_accum = -20, 
@@ -461,14 +461,25 @@ layout_matrix <- rbind(c(1, 1), c(2, 2), c(3, 4))
 grid.arrange(p2b, p3b, p_4_PET, p_4_plasma, layout_matrix = layout_matrix)
 grid.arrange(p_PET, p_error_PET[[1]],
              p_pT217, p_error_pT217[[1]], nrow = 2, ncol = 2)
+graph2ppt(file = "./Figures/ADNIModelandError.pptx", width = 6.5, height = 5)
 
 
 
 
 
+p1 <- ggplot(matched[!duplicated(matched$PTID) & matched$PTID %in% counts$PTID,], aes(x = CENTILOIDS.combat, y = pT217_AB42_F)) +
+  geom_point() + theme_bw() + geom_vline(xintercept = cp_PET_Z$optimal_cutpoint * sd_CL + mean_CL, linetype = "dashed") +
+  geom_hline(yintercept = cp_pT217_Z$optimal_cutpoint * sd_pT + mean_pT, linetype = "dashed") + 
+  ggtitle("A.") + xlab("Cortical Amyloid (CL)") + ylab("Plasma pTau217/AB42 - Fujirebio")
+
+p2 <- cp_PET_pT217_obj[[1]] + ggtitle("B.")
+grid.arrange(p1, p2, nrow = 1, ncol = 2)
+graph2ppt(file = "./Figures/ADNIBasicDataandCutpoints.pptx", width = 6.5, height = 4)
+
+matched$pTpos <- ifelse(matched$pT217_AB42_F > (cp_pT217_Z$optimal_cutpoint * sd_pT + mean_pT), 1, 0)
+matched$CLpos <- ifelse(matched$CENTILOIDS.combat > (cp_PET_Z$optimal_cutpoint * sd_CL + mean_CL),1 , 0)
+table(matched[!duplicated(matched$PTID) & matched$PTID %in% counts$PTID,]$CLpos, matched[!duplicated(matched$PTID) & matched$PTID %in% counts$PTID,]$pTpos)
 
 
-
-
-
+plot_df <- matched[matched$PTID %in% counts$PTID,]
 
