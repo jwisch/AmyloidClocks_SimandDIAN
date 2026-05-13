@@ -1,6 +1,7 @@
 library(data.table)
 library(lubridate)
 library(sva)
+library(tableone)
 source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
@@ -92,7 +93,7 @@ df$age_at_visit <- round(as.numeric(df$VISDATE - df$PTDOBYY) / 365.25, 1)
 av45 <- merge(av45, df[, c("PTID", "PTDOBYY")], by = "PTID",
               all.x = TRUE, all.y = FALSE)
 c2n <- merge(c2n, df[, c("PTID", "PTDOBYY")], by = "PTID",
-              all.x = TRUE, all.y = FALSE)
+             all.x = TRUE, all.y = FALSE)
 
 av45$SCANDATE <- as.Date(av45$SCANDATE, format = "%Y-%m-%d")
 
@@ -159,8 +160,18 @@ cdr$VISDATE <- as.Date(cdr$VISDATE, format = "%Y-%m-%d")
 matched <- merge(final_merged, mmse, by = c("PTID", "VISDATE"),
                  all = FALSE)
 matched <- merge(matched, cdr, by = c("PTID", "VISDATE"),
-             all = FALSE)
+                 all = FALSE)
 
+matched$Apos <- ifelse(matched$CENTILOIDS.combat > 18, 1, 0)
+counts <- setDT(matched)[, .N, by = PTID]
+counts <- counts[counts$N > 1,]
+
+tableone <- merge(matched[, c("PTID", "Age", "PTGENDER", "CENTILOIDS.combat", "pT217_AB42_F", "Apos", "CDGLOBAL")], counts, by = "PTID", all = FALSE)
+tableone <- tableone[!duplicated(tableone$PTID),]
+
+vars <- c("Age", "PTGENDER", "CENTILOIDS.combat", "pT217_AB42_F", "Apos", "CDGLOBAL")
+factorVars <- c("PTGENDER", "Apos", "CDGLOBAL")
+CreateTableOne(data = tableone, vars = vars, factorVars = factorVars)
 
 
 # source("./ADNIanalysis/cleanADNIAlamardata.R")
@@ -193,7 +204,7 @@ matched$Apos <- ifelse(matched$CL_Z > Apos_thresh_CL_Z, 1, 0)
 ##PICK UP HERE AND RUN ALAMAR STUFF
 ###################
 pT217_Z_PET_Thresh <- run_cutpointr_analysis(matched, "pTau217_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
-                                                      "Centiloids, Amyloid PET (Z)", "Plasma pTau217 / AB42 (Z)")
+                                             "Centiloids, Amyloid PET (Z)", "Plasma pTau217 / AB42 (Z)")
 # Alamar_pT181_Z_PET_Thresh <- run_cutpointr_analysis(ala, "Alamar_pT181_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
 #                                                     "Centiloids, Amyloid PET (Z)", "Alamar Plasma pTau181 (Z)")
 # Alamar_pT217_Z_PET_Thresh <- run_cutpointr_analysis(ala, "Alamar_pT217_Z", "Apos", y1 = -3, y2 = 7, "CL_Z",
@@ -214,7 +225,7 @@ rel_accum_PET_Z <- mean(max(RofC_PET_Z[RofC_PET_Z$classification == 1,]$rate_of_
                         min(RofC_PET_Z[RofC_PET_Z$classification == 2,]$rate_of_change))
 
 rel_accum_pT217_Z <- mean(max(RofC_pT217_Z[RofC_pT217_Z$classification == 1,]$rate_of_change),
-                        min(RofC_pT217_Z[RofC_pT217_Z$classification == 2,]$rate_of_change))
+                          min(RofC_pT217_Z[RofC_pT217_Z$classification == 2,]$rate_of_change))
 
 colnames(RofC_PET_Z)[2] <- "RofC_PET_Z"
 colnames(RofC_pT217_Z)[2] <- "RofC_pT217_Z"
@@ -379,14 +390,14 @@ grid.arrange(p_PET, p_pT217, nrow = 2, ncol = 1)
 
 
 
-p_error_PET <- plot_threshold_crossings(matched, id_col = "PTID", age_col = "Age", 
+p_error_PET <- plot_threshold_crossings(data.frame(matched), id_col = "PTID", age_col = "Age", 
                                         value_col = "CL_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL, 
                                         XLIM = c(50, 90), YLIM = c(50, 90),
                                         XPOS = 70, YPOS = 65)
 p_error_pT217 <- plot_threshold_crossings(matched, id_col = "PTID", age_col = "Age", 
-                                          value_col = "pTau217_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL, 
-                                          XLIM = c(50, 90), YLIM = c(50, 90),
-                                          XPOS = 70, YPOS = 65)
+                                          value_col = "pTau217_Z", threshold = Apos_thresh_CL_Z, color_grad = NULL)#, 
+                                          # XLIM = c(50, 90), YLIM = c(50, 90),
+                                          # XPOS = 70, YPOS = 65)
 
 
 results <- data.frame("Biomarker" = c("PET", "PlasmapT217/AB42"),

@@ -19,8 +19,8 @@ source("./Fig1and2Funcs.R")
 df <- read.csv("../Alamar_AmyloidClocks/Data/cleaned_df_withBatchNorming_20260420.csv")
 
 
-cols <- c(which(names(df) == "CL") : which(names(df) == "plasmapTau181_jucker" ),
-          which(names(df) == "CSFpT181_Nico_corrected") : which(names(df) == "BD.pTau.217"))
+cols <- c(which(names(df) == "fam_mutation") : which(names(df) == "plasmapTau181_jucker" ),
+          which(names(df) == "Study.Period") : which(names(df) == "BD.pTau.217"))
 
 #Identifying cross-sectional and longituidnal counts
 df_flags <- df %>%
@@ -46,8 +46,20 @@ levels(df_flags$SEX) <- c("male", "female")
 df_flags$fam_mutation <-as.factor(df_flags$fam_mutation)
 levels(df_flags$fam_mutation) <- c("PSEN1", "PSEN2", "APP")
 
+df_flags <- df_flags[df_flags$CL_two_plus == TRUE |df_flags$CSFpT181_Nico_corrected_any == TRUE |
+                       df_flags$LUMIPULSE_CSF_pTau_two_plus == TRUE | df_flags$plasmapTau217_Nico_two_plus == TRUE |
+                       df_flags$plasmapTau181_Nico_two_plus == TRUE | df_flags$plasmapTau181_jucker_two_plus |
+                       df_flags$CSFpT217_Nico_corrected_two_plus == TRUE | df_flags$Alamar_pTau181_two_plus |
+                       df_flags$Alamar_pTau217_two_plus == TRUE | df_flags$AlamarCSF_pTau217_two_plus == TRUE |
+                       df_flags$AlamarCSF_pTau181_two_plus == TRUE | df_flags$BD.pTau.217_two_plus == TRUE,]
+
 myVars <- c("VISITAGEc", "DIAN_EYO", "N", "SEX", "RACE", "apoe", "fam_mutation", 
-            names(df_flags)[9:(length(df_flags) - 2)])
+            "CL_two_plus", "CSFpT181_Nico_corrected_any", "LUMIPULSE_CSF_pTau_two_plus", 
+            "plasmapTau217_Nico_two_plus", "plasmapTau181_jucker_two_plus",
+            "CSFpT181_Nico_corrected_two_plus", "CSFpT217_Nico_corrected_two_plus",
+            "Alamar_pTau181_two_plus","Alamar_pTau217_two_plus",
+            "AlamarCSF_pTau217_two_plus", "AlamarCSF_pTau181_two_plus",
+            "BD.pTau.217_any")
 factorVars <- c("SEX", "RACE", "apoe", "fam_mutation")
 
 tab <- CreateTableOne(vars = myVars, strata = "Mutation", factorVars = factorVars, data = df_flags)

@@ -221,25 +221,29 @@ define_baseline_rel_to_RelAccum <- function(df, col_name, cp_obj, thresh_col_nam
 }
 
 
-combine_RofC_and_df <- function(df, biomarker_col, RofC_df, RofC_col, rel_accum) {
+combine_RofC_and_df <- function(df, biomarker_col, RofC_df, RofC_col, rel_accum,
+                                ID_col, age_col, gender_col) {
   
   # Ensure biomarker_col is a symbol for tidy evaluation
   biomarker_sym <- sym(biomarker_col)
   RofC_sym <- sym(RofC_col)
+  ID_sym <- sym(ID_col)
+  age_sym <- sym(age_col)
+  gender_sym <- sym(gender_col)
   
   # Get earliest visit info per subject
   df_earliest <- df %>%
     filter(!is.na(!!biomarker_sym)) %>%
-    group_by(newid18) %>%
-    slice_min(VISITAGEc, with_ties = FALSE) %>%  # keep only the row with minimum VISITAGEc
+    group_by(!!ID_sym) %>%
+    slice_min(!!age_sym, with_ties = FALSE) %>%  # keep only the row with minimum VISITAGEc
     ungroup() %>%
-    select(newid18, VISITAGEc, SEX, RACE, apoe, Mutation, fam_mutation, CL_Z, !!biomarker_sym)
+    select(!!ID_sym, !!age_sym, !!gender_sym,  CL_Z, !!biomarker_sym)
   # Merge with RofC dataframe using dplyr::select for dynamic column
   merged_df <- merge(
     RofC_df %>%
-      select(newid18, !!RofC_sym, classification),
+      select(!!ID_sym, !!RofC_sym, classification),
     df_earliest,
-    by = "newid18",
+    by = ID_col,
     all = FALSE
   )
   
