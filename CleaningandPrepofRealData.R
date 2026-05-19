@@ -206,19 +206,32 @@ colnames(RofC_BD.pTau.181_Z)[2] <- "RofC_BD.pTau.181_Z"
 colnames(RofC_BD.pTau.217_Z)[2] <- "RofC_BD.pTau.217_Z"
 
 
-RofC_CSFpT217_Nico_Z <- combine_RofC_and_df(df, "CSFpT217_Nico_Z", RofC_CSFpT217_Nico_Z,"RofC_CSFpT217_Nico_Z", rel_accum_CSFpT217_Nico_Z )
-RofC_plasmapT217_Nico_Z <- combine_RofC_and_df(df, "plasmapTau217_Nico_Z", RofC_plasmapT217_Nico_Z,"RofC_plasmapT217_Nico_Z", rel_accum_plasmapT217_Nico_Z )
-RofC_AlamarpT217_Z <- combine_RofC_and_df(df, "Alamar_pTau217_Z", RofC_AlamarpT217_Z,"RofC_AlamarpT217_Z", rel_accum_AlamarpT217_Z )
-RofC_AlamarCSFpT217_Z <- combine_RofC_and_df(df, "AlamarCSF_pTau217_Z", RofC_AlamarCSFpT217_Z,"RofC_AlamarCSFpT217_Z", rel_accum_AlamarCSFpT217_Z )
-RofC_pib_Z <- combine_RofC_and_df(df, "CL_Z", RofC_pib_Z,"RofC_pib_Z", rel_accum_pib_Z )
-RofC_CSFpT181_Nico_Z <- combine_RofC_and_df(df, "CSFpT181_Nico_Z", RofC_CSFpT181_Nico_Z,"RofC_CSFpT181_Nico_Z", rel_accum_CSFpT181_Nico_Z )
-RofC_plasmapT181_Nico_Z <- combine_RofC_and_df(df, "plasmapTau181_Nico_Z", RofC_plasmapT181_Nico_Z,"RofC_plasmapT181_Nico_Z", rel_accum_plasmapT181_Nico_Z )
-RofC_plasmapT181_Jucker_Z <- combine_RofC_and_df(df, "plasmapTau181_jucker_Z", RofC_plasmapT181_Jucker_Z,"RofC_plasmapT181_Jucker_Z", rel_accum_plasmapT181_Jucker_Z )
-RofC_AlamarpT181_Z <- combine_RofC_and_df(df, "Alamar_pTau181_Z", RofC_AlamarpT181_Z,"RofC_AlamarpT181_Z", rel_accum_AlamarpT181_Z )
-RofC_AlamarCSFpT181_Z <- combine_RofC_and_df(df, "AlamarCSF_pTau181_Z", RofC_AlamarCSFpT181_Z,"RofC_AlamarCSFpT181_Z", rel_accum_AlamarCSFpT181_Z )
-RofC_LumipulseCSFpT181_Z <- combine_RofC_and_df(df, "LUMIPULSE_CSF_pTau_Z", RofC_LumipulseCSFpT181_Z,"RofC_LumipulseCSFpT181_Z", rel_accum_LumipulseCSFpT181_Z )
-RofC_BD.pTau.181_Z <- combine_RofC_and_df(df, "BD.pTau.181_Z", RofC_BD.pTau.181_Z,"RofC_BD.pTau.181_Z", rel_accum_BD.pTau.181_Z )
-RofC_BD.pTau.217_Z <- combine_RofC_and_df(df, "BD.pTau.217_Z", RofC_BD.pTau.217_Z,"RofC_BD.pTau.217_Z", rel_accum_BD.pTau.217_Z )
+RofC_CSFpT217_Nico_Z <- combine_RofC_and_df(df, "CSFpT217_Nico_Z", RofC_CSFpT217_Nico_Z,"RofC_CSFpT217_Nico_Z", rel_accum_CSFpT217_Nico_Z, 
+                                            ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX" )
+RofC_plasmapT217_Nico_Z <- combine_RofC_and_df(df, "plasmapTau217_Nico_Z", RofC_plasmapT217_Nico_Z,"RofC_plasmapT217_Nico_Z", rel_accum_plasmapT217_Nico_Z, 
+                                               ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_AlamarpT217_Z <- combine_RofC_and_df(df, "Alamar_pTau217_Z", RofC_AlamarpT217_Z,"RofC_AlamarpT217_Z", rel_accum_AlamarpT217_Z, 
+                                          ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_AlamarCSFpT217_Z <- combine_RofC_and_df(df, "AlamarCSF_pTau217_Z", RofC_AlamarCSFpT217_Z,"RofC_AlamarCSFpT217_Z", rel_accum_AlamarCSFpT217_Z, 
+                                             ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_pib_Z <- combine_RofC_and_df(df, "CL_Z", RofC_pib_Z,"RofC_pib_Z", rel_accum_pib_Z, 
+                                  ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_CSFpT181_Nico_Z <- combine_RofC_and_df(df, "CSFpT181_Nico_Z", RofC_CSFpT181_Nico_Z,"RofC_CSFpT181_Nico_Z", rel_accum_CSFpT181_Nico_Z, 
+                                            ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_plasmapT181_Nico_Z <- combine_RofC_and_df(df, "plasmapTau181_Nico_Z", RofC_plasmapT181_Nico_Z,"RofC_plasmapT181_Nico_Z", rel_accum_plasmapT181_Nico_Z, 
+                                               ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_plasmapT181_Jucker_Z <- combine_RofC_and_df(df, "plasmapTau181_jucker_Z", RofC_plasmapT181_Jucker_Z,"RofC_plasmapT181_Jucker_Z", rel_accum_plasmapT181_Jucker_Z, 
+                                                 ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_AlamarpT181_Z <- combine_RofC_and_df(df, "Alamar_pTau181_Z", RofC_AlamarpT181_Z,"RofC_AlamarpT181_Z", rel_accum_AlamarpT181_Z, 
+                                          ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_AlamarCSFpT181_Z <- combine_RofC_and_df(df, "AlamarCSF_pTau181_Z", RofC_AlamarCSFpT181_Z,"RofC_AlamarCSFpT181_Z", rel_accum_AlamarCSFpT181_Z, 
+                                             ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_LumipulseCSFpT181_Z <- combine_RofC_and_df(df, "LUMIPULSE_CSF_pTau_Z", RofC_LumipulseCSFpT181_Z,"RofC_LumipulseCSFpT181_Z", rel_accum_LumipulseCSFpT181_Z, 
+                                                ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_BD.pTau.181_Z <- combine_RofC_and_df(df, "BD.pTau.181_Z", RofC_BD.pTau.181_Z,"RofC_BD.pTau.181_Z", rel_accum_BD.pTau.181_Z, 
+                                          ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
+RofC_BD.pTau.217_Z <- combine_RofC_and_df(df, "BD.pTau.217_Z", RofC_BD.pTau.217_Z,"RofC_BD.pTau.217_Z", rel_accum_BD.pTau.217_Z, 
+                                          ID_col = "newid18", age_col = "VISITAGEc", gender_col = "SEX"  )
 
 
 #Creating flag for reliable accumulation

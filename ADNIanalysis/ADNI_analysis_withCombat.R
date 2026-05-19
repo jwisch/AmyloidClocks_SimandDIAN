@@ -200,6 +200,7 @@ Apos_thresh_CL_Z <- approx(matched$CENTILOIDS.combat, matched$CL_Z, 18)$y
 matched$Apos <- ifelse(matched$CL_Z > Apos_thresh_CL_Z, 1, 0)
 # ala$Apos <- ifelse(ala$CL_Z > Apos_thresh_CL_Z, 1, 0)
 
+saveRDS(matched, ".././Alamar_AmyloidClocks/Data/ADNI_matched.RDS")
 ###################
 ##PICK UP HERE AND RUN ALAMAR STUFF
 ###################
