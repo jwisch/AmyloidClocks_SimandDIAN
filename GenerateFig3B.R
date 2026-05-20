@@ -22,6 +22,7 @@ source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
 
 source("./CleaningandPrepofRealData.R")
+source("./ADNIanalysis/ADNI_analysis_withCombat.R")
 
 
 ####### READ IN RESULTS FROM GENERATE_TIMETOPOSITIVITY_REALDATA
@@ -159,14 +160,14 @@ results <- data.frame("Biomarker" = c("PiB", "CSFpT217_IPMS", "CSFpT217_Alamar",
                                       "PlasmapT217_Alamar", "PlasmapT217_IPMS",
                                       "CSFpT181_IPMS", "CSFpT181_Alamar", "PlasmapT181_Alamar",
                                       "CSFpT181_Lumipulse", "PlasmapT181_IPMS", "PlasmapT181_Simoa",
-                                      "CSFBDpT181"),
+                                      "CSFBDpT181", "ADNI PET", "ADNI pTau217/AB42"),
                       "MAE" = c(p_error_pib[[2]],
                                 p_error_CSFpT217_Nico[[2]],  p_error_AlamarCSF_pTau217[[2]], p_error_Alamar_pTau217[[2]], p_error_plasmapTau217_Nico[[2]],
                                 p_error_CSFpT181_Nico[[2]], p_error_AlamarCSF_pTau181[[2]], p_error_Alamar_pTau181[[2]],
                                 p_error_LumipulseCSF_pTau181[[2]],p_error_plasmapTau181_Nico[[2]], p_error_plasmapTau181_jucker[[2]],
-                                p_error_BD.pTau.217_Z[[2]]),
+                                p_error_BD.pTau.217_Z[[2]], p_error_PET[[2]], p_error_pT217[[2]]),
                       "Modality" = c("PET", "CSF", "CSF", "Plasma", "Plasma", 
-                                     "CSF", "CSF", "Plasma", "CSF", "Plasma", "Plasma", "CSF"))
+                                     "CSF", "CSF", "Plasma", "CSF", "Plasma", "Plasma", "CSF", "PET", "Plasma"))
 
 
 
@@ -180,6 +181,6 @@ results %>%
     axis.text.x = element_text(angle = 45, hjust = 1)
   ) + geom_hline(yintercept = 2, linetype = "dashed") +
   scale_colour_manual(values = c("black", "#007B82", "#F8766D")) +
-  scale_shape_manual(values = c(19, 3,17)) + xlab("") + ylab("Mean Average Error (Years)")
+  scale_shape_manual(values = c(19, 15,17)) + xlab("") + ylab("Mean Average Error (Years)")
 graph2ppt(file = "./Figures/Evaluation_of_Real_Models_PointsvsMAE.pptx", width = 4.5, height = 5)
 

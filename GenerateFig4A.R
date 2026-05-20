@@ -207,7 +207,7 @@ lemon::grid_arrange_shared_legend(p1, p2, p3, p4, p5, p6, nrow = 1, ncol = 6)
 
 
 
-p1a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0,], 
+p1a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
@@ -219,7 +219,7 @@ p1a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & result
                                  ),  # very light endpoint
                                  "Xi = -, Omega = 1.5, Alpha = -1, Error = 0")
 
-p2a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0.03,], 
+p2a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0.03,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
@@ -231,7 +231,7 @@ p2a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & result
                                  ),  # very light endpoint
                                  "Xi = -, Omega = 1.5, Alpha = -1, Error = 0.03")
 
-p3a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0.07,], 
+p3a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0.07,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
@@ -245,7 +245,7 @@ p3a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & result
 
 
 
-p4a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0.10,], 
+p4a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0.10,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
@@ -256,7 +256,7 @@ p4a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & result
                                    "grey90"   # lightest
                                  ),  # very light endpoint
                                  "Xi = -, Omega = 1.5, Alpha = -1, Error = 0.10")
-p5a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0.15,], 
+p5a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0.15,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
@@ -267,7 +267,7 @@ p5a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & result
                                    "grey90"   # lightest
                                  ),  # very light endpoint
                                  "Xi = -, Omega = 1.5, Alpha = -1, Error = 0.15")
-p6a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 1 & results_df$error == 0.20,], 
+p6a <- plot_hist_density_at_time(data = results_df[results_df$Xi == 0.5 & results_df$Omega == 1 & results_df$Alpha == 0 & results_df$error == 0.20,], 
                                  time_vals = c(-2 ,0, 2, 4, 6),
                                  binwidth = 0.01,
                                  color_vec =   c(
