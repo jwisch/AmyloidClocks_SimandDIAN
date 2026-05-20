@@ -263,7 +263,7 @@ RofC_cols <- c(
 )
 
 
-RofC_fits <- purrr::map(RofC_list, function(df_i) {
+RofC_fits_ADNI <- purrr::map(RofC_list, function(df_i) {
   # Dynamically detect the "RofC_" column
   rofc_col <- grep("^RofC_", names(df_i), value = TRUE)
   
@@ -346,11 +346,11 @@ cp_PET_pT217_obj <- get_RofC_scatter_and_ROC(matched[!duplicated(matched$PTID),]
                                                           "Plasma pTau217/AB42 (Z)", "Amyloid Positive - 18 CL")
 
 
-RofC_fits$modality <- c("PET", "Plasma")
-RofC_fits$Analyte <- c("PET", "pT217")
-RofC_fits$Assay <- c( "PET", "Fujirubio")
+RofC_fits_ADNI$modality <- c("PET", "Plasma")
+RofC_fits_ADNI$Analyte <- c("PET", "pT217")
+RofC_fits_ADNI$Assay <- c( "PET", "Fujirubio")
 
-p2b <- ggplot(RofC_fits, aes(x = omega, y = xi, label = biomarker_col, colour = Assay,
+p2b <- ggplot(RofC_fits_ADNI, aes(x = omega, y = xi, label = biomarker_col, colour = Assay,
                       shape = Analyte)) +
   geom_point(aes(size = alpha, alpha = 0.6)) + scale_colour_manual(values = c("#007B82", "#C77CFF",  "green", "black","#F8766D" )) +
   scale_shape_manual(values = c(19, 17,19)) +

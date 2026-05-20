@@ -3,6 +3,7 @@ library(dplyr)
 library(stringr)
 library(ggplot2)
 library(ggbreak)
+library(patchwork)
 dt_summary <- readRDS( "./Data/medianMAEspecificSimParamsnotest-rest.RDS") #BootstarppedMAEComparison_histogram
 # alpha = -2 / omega = 2 / xi = -1
 # alpha = -1 / omega = 1.5 / xi = 0
@@ -93,7 +94,7 @@ get_plot <- function(Xi, Omega, Alpha, color1 = "grey70", color2 = "black"){
     labs(
       x = "Intra-Individual Error",
       y = "MAE (years)"
-    ) + ylim(c(-60, 60))
+    ) + ylim(c(-30, 30))
   dt_summary$error <- 0
   p_inset <- ggplot(dt_summary[dt_summary$Xi == Xi & dt_summary$Omega == Omega & dt_summary$Alpha == Alpha,] , aes(x = error)) +
     
@@ -122,9 +123,8 @@ get_plot <- function(Xi, Omega, Alpha, color1 = "grey70", color2 = "black"){
   
   
 }
-
 p1 <- get_plot(Xi = 0, Omega = 1.5, Alpha = -1, color1 = "#00BFC4", color2 = "#007B82")
-p2 <- get_plot(Xi = 0.5, Omega = 1, Alpha = 1, color1 = "#00BFC4", color2 = "#007B82")
+p2 <- get_plot(Xi = 0.5, Omega = 1, Alpha = 0, color1 = "#00BFC4", color2 = "#007B82")
 p3 <- get_plot(Xi = 1, Omega = 0.5, Alpha = 2, color1 = "#00BFC4", color2 = "#007B82")
 
 (p1 | p2 | p3)
