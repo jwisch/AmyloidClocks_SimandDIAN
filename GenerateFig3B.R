@@ -20,9 +20,9 @@ library(export)
 source("./functions.R")
 source("./Simulation_functions.R")
 source("./Fig1and2Funcs.R")
+source("./ADNI_prep_for_analysis.R")
 
 source("./CleaningandPrepofRealData.R")
-source("./ADNIanalysis/ADNI_analysis_withCombat.R")
 
 
 ####### READ IN RESULTS FROM GENERATE_TIMETOPOSITIVITY_REALDATA
@@ -55,6 +55,9 @@ df$TimefromApos_CSFpT181_Z <- approx(y = result_PET_CSFpT181_Nico_Z$Time_to_Posi
                                      x = result_PET_CSFpT181_Nico_Z$Estimate, xout = df$CSFpT181_Nico_Z)$y
 df$TimefromApos_plasmapT181_Nico_Z <- approx(y = result_PET_plasmapTau181_Nico_Z$Time_to_Positivity, 
                                              x = result_PET_plasmapTau181_Nico_Z$Estimate, xout = df$plasmapTau181_Nico_Z)$y
+df$TimefromApos_plasmapT217_Nico_Z <- approx(y = result_PET_plasmapTau217_Nico_Z$Time_to_Positivity, 
+                                             x = result_PET_plasmapTau217_Nico_Z$Estimate, xout = df$plasmapTau217_Nico_Z)$y
+
 df$TimefromApos_plasmapT181_Jucker_Z <- approx(y = result_PET_plasmapTau181_Jucker_Z$Time_to_Positivity, 
                                                x = result_PET_plasmapTau181_Jucker_Z$Estimate, xout = df$plasmapTau181_jucker_Z)$y
 df$TimefromApos_AlamarpT181_Z <- approx(y = result_PET_Alamar_pTau181_Z$Time_to_Positivity, 
@@ -69,7 +72,31 @@ df$TimefromApos_BD.pTau.217_Z <- approx(y = result_PET_BD.pTau.217_Z$Time_to_Pos
                                         x = result_PET_BD.pTau.217_Z$Estimate, xout = df$BD.pTau.217_Z)$y
 #now shifting to plotting these results
 
+df_for_positivity <- df[, c("newid18", "visit", "TimefromBaseline", "DIAN_EYO", "VISITAGEc", 
+                            "CSFpT181_Nico_Z", "CSFpT217_Nico_Z", "LUMIPULSE_CSF_pTau_Z",                      
+                            "plasmapTau217_Nico_Z", "plasmapTau181_Nico_Z", "plasmapTau181_jucker_Z",                     
+                            "Alamar_pTau181_Z", "Alamar_pTau217_Z", "AlamarCSF_pTau181_Z",                        
+                            "AlamarCSF_pTau217_Z", "BD.pTau.217_Z" ,                             
+                            "CL_Z",                   
+                            "TimefromApos_AlamarpT217_Z","TimefromApos_Z","TimefromApos_AlamarCSFpT217_Z",             
+                            "TimefromApos_CSFpT181_Z","TimefromApos_CSFpT217_Z",
+                            "TimefromApos_plasmapT181_Nico_Z","TimefromApos_plasmapT217_Nico_Z","TimefromApos_plasmapT181_Jucker_Z",         
+                            "TimefromApos_AlamarpT181_Z","TimefromApos_AlamarCSFpT181_Z","TimefromApos_LumipulseCSFpT181_Z",          
+                            "TimefromApos_BD.pTau.217_Z")]
 
+df_for_positivity$Apos_by_CSFpT181_Nico_Z <- ifelse(df_for_positivity$CSFpT181_Nico_Z > cp_PET_CSFpT181_Nico_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_CSFpT217_Nico_Z <- ifelse(df_for_positivity$CSFpT217_Nico_Z > cp_PET_CSFpT217_Nico_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_LUMIPULSE_CSF_pTau_Z <- ifelse(df_for_positivity$LUMIPULSE_CSF_pTau_Z > cp_PET_LumipulseCSF_pTau181_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_plasmapTau217_Nico_Z <- ifelse(df_for_positivity$plasmapTau217_Nico_Z > cp_PET_plasmapTau217_Nico_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_plasmapTau181_Nico_Z <- ifelse(df_for_positivity$plasmapTau181_Nico_Z > cp_PET_plasmapTau181_Nico_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_plasmapTau181_jucker_Z <- ifelse(df_for_positivity$plasmapTau181_jucker_Z > cp_PET_plasmapTau181_Jucker_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_AlamarpT181_Z <- ifelse(df_for_positivity$Alamar_pTau181_Z > cp_PET_Alamar_pTau181_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_AlamarpT217_Z <- ifelse(df_for_positivity$Alamar_pTau217_Z > cp_PET_Alamar_pTau217_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_AlamarCSF_pT181_Z <- ifelse(df_for_positivity$AlamarCSF_pTau181_Z > cp_PET_AlamarCSF_pTau181_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_AlamarCSF_pT217_Z <- ifelse(df_for_positivity$AlamarCSF_pTau217_Z > cp_PET_AlamarCSF_pTau217_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_BD.pTau.217_Z <- ifelse(df_for_positivity$BD.pTau.217_Z > cp_PET_BD.pTau.217_obj[[3]]$optimal_cutpoint, 1, 0)
+df_for_positivity$Apos_by_CL_Z <- ifelse(df_for_positivity$CL_Z > Apos_thresh_CL_Z, 1, 0)
+saveRDS(df_for_positivity, "./Data/df_for_positivity_DIAN.RDS")
 
 p_CSF_217 <- get_TimefromAposPlot(result_PET_CSFpT217_Nico_Z, cp_CSFpT217_Nico_Z$optimal_cutpoint, 
                                   "CSF pTau217 - Nico Z")
@@ -147,14 +174,14 @@ p_error_BD.pTau.217_Z <- plot_threshold_crossings(df, id_col = "newid18", age_co
                                                   value_col = "BD.pTau.217_Z", threshold = cp_PET_BD.pTau.217_obj[[3]]$optimal_cutpoint)
 
 
-lemon::grid_arrange_shared_legend(p_error_pib[[1]],
-                                  p_error_CSFpT217_Nico[[1]],  p_error_AlamarCSF_pTau217[[1]], p_error_Alamar_pTau217[[1]], p_error_plasmapTau217_Nico[[1]],
-                                  p_error_CSFpT181_Nico[[1]], p_error_AlamarCSF_pTau181[[1]], p_error_Alamar_pTau181[[1]],
-                                  p_error_LumipulseCSF_pTau181[[1]],p_error_plasmapTau181_Nico[[1]], p_error_plasmapTau181_jucker[[1]],
-                                  p_error_BD.pTau.181_Z[[1]], p_error_BD.pTau.217_Z[[1]],
-                                  layout_matrix = layout_matrix)
-
-graph2ppt(file = "./Figures/ObservedvsPredictedAgeatConversion.pptx", width = 10, height = 9)
+# lemon::grid_arrange_shared_legend(p_error_pib[[1]],
+#                                   p_error_CSFpT217_Nico[[1]],  p_error_AlamarCSF_pTau217[[1]], p_error_Alamar_pTau217[[1]], p_error_plasmapTau217_Nico[[1]],
+#                                   p_error_CSFpT181_Nico[[1]], p_error_AlamarCSF_pTau181[[1]], p_error_Alamar_pTau181[[1]],
+#                                   p_error_LumipulseCSF_pTau181[[1]],p_error_plasmapTau181_Nico[[1]], p_error_plasmapTau181_jucker[[1]],
+#                                   p_error_BD.pTau.217_Z[[1]],
+#                                   nrow = 3, ncol = 4)
+# 
+# graph2ppt(file = "./Figures/ObservedvsPredictedAgeatConversion.pptx", width = 10, height = 9)
 
 results <- data.frame("Biomarker" = c("PiB", "CSFpT217_IPMS", "CSFpT217_Alamar",
                                       "PlasmapT217_Alamar", "PlasmapT217_IPMS",
